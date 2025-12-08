@@ -1,0 +1,96 @@
+/* libpastry-version.h.in
+ *
+ * Copyright 2025 Eva
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+#pragma once
+
+#if !defined(LIBPASTRY_INSIDE) && !defined(LIBPASTRY_COMPILATION)
+# error "Only <libpastry.h> can be included directly."
+#endif
+
+/**
+ * SECTION:libpastryversion
+ * @short_description: libpastry version checking
+ *
+ * libpastry provides macros to check the version of the library
+ * at compile-time
+ */
+
+/**
+ * LIBPASTRY_MAJOR_VERSION:
+ *
+ * libpastry major version component (e.g. 1 if %LIBPASTRY_VERSION is 1.2.3)
+ */
+#define LIBPASTRY_MAJOR_VERSION (@MAJOR_VERSION@)
+
+/**
+ * LIBPASTRY_MINOR_VERSION:
+ *
+ * libpastry minor version component (e.g. 2 if %LIBPASTRY_VERSION is 1.2.3)
+ */
+#define LIBPASTRY_MINOR_VERSION (@MINOR_VERSION@)
+
+/**
+ * LIBPASTRY_MICRO_VERSION:
+ *
+ * libpastry micro version component (e.g. 3 if %LIBPASTRY_VERSION is 1.2.3)
+ */
+#define LIBPASTRY_MICRO_VERSION (@MICRO_VERSION@)
+
+/**
+ * LIBPASTRY_VERSION
+ *
+ * libpastry version.
+ */
+#define LIBPASTRY_VERSION (@VERSION@)
+
+/**
+ * LIBPASTRY_VERSION_S:
+ *
+ * libpastry version, encoded as a string, useful for printing and
+ * concatenation.
+ */
+#define LIBPASTRY_VERSION_S "@VERSION@"
+
+#define LIBPASTRY_ENCODE_VERSION(major,minor,micro) \
+        ((major) << 24 | (minor) << 16 | (micro) << 8)
+
+/**
+ * LIBPASTRY_VERSION_HEX:
+ *
+ * libpastry version, encoded as an hexadecimal number, useful for
+ * integer comparisons.
+ */
+#define LIBPASTRY_VERSION_HEX \
+        (LIBPASTRY_ENCODE_VERSION (LIBPASTRY_MAJOR_VERSION, LIBPASTRY_MINOR_VERSION, LIBPASTRY_MICRO_VERSION))
+
+/**
+ * LIBPASTRY_CHECK_VERSION:
+ * @major: required major version
+ * @minor: required minor version
+ * @micro: required micro version
+ *
+ * Compile-time version checking. Evaluates to %TRUE if the version
+ * of libpastry is greater than the required one.
+ */
+#define LIBPASTRY_CHECK_VERSION(major,minor,micro)   \
+        (LIBPASTRY_MAJOR_VERSION > (major) || \
+         (LIBPASTRY_MAJOR_VERSION == (major) && LIBPASTRY_MINOR_VERSION > (minor)) || \
+         (LIBPASTRY_MAJOR_VERSION == (major) && LIBPASTRY_MINOR_VERSION == (minor) && \
+          LIBPASTRY_MICRO_VERSION >= (micro)))
