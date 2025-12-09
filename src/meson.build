@@ -57,6 +57,6 @@ libpastry_gir = gnome.generate_gir(libpastry_lib,
             namespace: 'Libpastry',
         symbol_prefix: 'libpastry',
     identifier_prefix: 'Libpastry',
-             includes: ['Gio-2.0'],
+             includes: ['Gtk-4.0'],
               install: true,
 )

@@ -23,7 +23,9 @@
 
 #include <glib.h>
 
+#define LIBPASTRY_INSIDE
 #include "libpastry-version.h"
+#undef LIBPASTRY_INSIDE
 
 #ifndef _LIBPASTRY_EXTERN
 #define _LIBPASTRY_EXTERN extern
