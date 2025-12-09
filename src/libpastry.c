@@ -32,5 +32,28 @@
 void
 pastry_init (void)
 {
+  static gboolean initialized = FALSE;
+
   gtk_init ();
+
+  if (!initialized)
+    {
+      g_autoptr (GtkCssProvider) provider = NULL;
+      GdkDisplay *display                 = NULL;
+
+      provider = gtk_css_provider_new ();
+      gtk_css_provider_load_from_resource (
+          provider,
+          "/em/libpastry/Pastry/styles/gtk.css");
+      g_info ("Loaded stylesheet");
+
+      /* TODO: listen to creation of displays */
+      display = gdk_display_get_default ();
+      gtk_style_context_add_provider_for_display (
+          display,
+          GTK_STYLE_PROVIDER (provider),
+          GTK_STYLE_PROVIDER_PRIORITY_SETTINGS + 1);
+
+      initialized = TRUE;
+    }
 }

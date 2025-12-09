@@ -78,5 +78,6 @@ foreach arg: test_c_args
 endforeach
 add_project_arguments(project_c_args, language: 'c')
 
+gnome = import('gnome')
 subdir('src')
-
+subdir('demo')

@@ -28,10 +28,19 @@ libpastry_deps = [
   dependency('gtk4'),
 ]
 
-libpastry_lib = shared_library('libpastry-' + api_version,
+subdir('stylesheet')
+libpastry_sources += [libpastry_stylesheet_resources]
+
+libpastry_lib = shared_library(
+  'libpastry-' + api_version,
   libpastry_sources,
   dependencies: libpastry_deps,
        install: true,
+)
+libpastry_dep = declare_dependency(
+  link_with: libpastry_lib,
+  dependencies: libpastry_deps,
+  include_directories : include_directories('..', '.'),
 )
 
 install_headers(libpastry_headers, subdir: 'libpastry')

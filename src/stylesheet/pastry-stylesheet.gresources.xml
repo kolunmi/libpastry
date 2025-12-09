@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/em/libpastry/Pastry/styles">
+    <file>gtk.css</file>
+  </gresource>
+
+  <gresource prefix="/org/gtk/libgtk/theme/Pastry-empty">
+    <file alias='gtk.css'>empty.css</file>
+    <file alias='gtk-dark.css'>empty.css</file>
+    <file alias='gtk-hc.css'>empty.css</file>
+    <file alias='gtk-hc-dark.css'>empty.css</file>
+  </gresource>
+</gresources>
