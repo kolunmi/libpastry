@@ -2,11 +2,13 @@ api_version = '0.1'
 
 libpastry_sources = [
   'libpastry.c',
+  'pastry-animation.c',
 ]
 
 libpastry_headers = [
   'libpastry-version-macros.h',
   'libpastry.h',
+  'pastry-animation.h',
 ]
 
 version_split = meson.project_version().split('.')
@@ -59,13 +61,13 @@ pkg.generate(
 
 gnome = import('gnome')
 libpastry_gir = gnome.generate_gir(libpastry_lib,
-              sources: [libpastry_sources, libpastry_headers],
+              sources: [libpastry_sources, files('libpastry.h')],
                header: 'libpastry.h',
       export_packages: 'libpastry-' + api_version,
             nsversion: api_version,
-            namespace: 'Libpastry',
-        symbol_prefix: 'libpastry',
-    identifier_prefix: 'Libpastry',
+            namespace: 'pastry',
+        symbol_prefix: 'pastry',
+    identifier_prefix: 'pastry',
              includes: ['Gtk-4.0'],
               install: true,
 )

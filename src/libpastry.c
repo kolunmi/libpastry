@@ -36,6 +36,8 @@ pastry_init (void)
 
   gtk_init ();
 
+  g_type_ensure (PASTRY_TYPE_ANIMATION);
+
   if (!initialized)
     {
       g_autoptr (GtkCssProvider) provider = NULL;

@@ -7,6 +7,7 @@ project('libpastry', 'c',
 cc = meson.get_compiler('c')
 
 config_h = configuration_data()
+config_h.set_quoted('LIBPASTRY_INSIDE', '1')
 config_h.set_quoted('PACKAGE_VERSION', meson.project_version())
 configure_file(output: 'config.h', configuration: config_h)
 add_project_arguments(['-I' + meson.project_build_root()], language: 'c')

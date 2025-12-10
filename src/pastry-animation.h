@@ -1,4 +1,4 @@
-/* libpastry.h
+/* pastry-animation.h
  *
  * Copyright 2025 Eva M
  *
@@ -20,17 +20,27 @@
 
 #pragma once
 
+#ifndef LIBPASTRY_INSIDE
+#error "Only <libpastry.h> can be included directly."
+#endif
+
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define LIBPASTRY_INSIDE
-#include "libpastry-version-macros.h"
-#include "pastry-animation.h"
-#undef LIBPASTRY_INSIDE
+#define PASTRY_TYPE_ANIMATION (pastry_animation_get_type ())
+G_DECLARE_FINAL_TYPE (PastryAnimation, pastry_animation, PASTRY, ANIMATION, GObject)
 
-LIBPASTRY_AVAILABLE_IN_ALL
 void
-pastry_init (void);
+pastry_animation_set_target (PastryAnimation *self,
+                             GObject         *target);
+GObject *
+pastry_animation_get_target (PastryAnimation *self);
+
+void
+pastry_animation_set_property_name (PastryAnimation *self,
+                                    const char      *property_name);
+const char *
+pastry_animation_get_property_name (PastryAnimation *self);
 
 G_END_DECLS
