@@ -23,6 +23,7 @@
 #include "config.h"
 
 #include "pastry-animation.h"
+#include "pastry-util.h"
 
 enum
 {
@@ -49,8 +50,10 @@ dispose (GObject *object)
 {
   PastryAnimation *self = PASTRY_ANIMATION (object);
 
-  g_clear_object (&self->target);
-  g_clear_pointer (&self->property_name, g_free);
+  pastry_clear_pointers (
+      &self->target, g_object_unref,
+      &self->property_name, g_free,
+      NULL);
 
   G_OBJECT_CLASS (pastry_animation_parent_class)->dispose (object);
 }
@@ -113,7 +116,7 @@ pastry_animation_class_init (PastryAnimationClass *klass)
           G_TYPE_OBJECT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
-  props[PROP_TARGET] =
+  props[PROP_PROPERTY_NAME] =
       g_param_spec_string (
           "property-name",
           NULL, NULL, NULL,

@@ -21,6 +21,7 @@
 #define G_LOG_DOMAIN "PASTRY::CORE"
 
 #include "libpastry.h"
+#include "pastry-util.h"
 
 /**
  * pastry_init:

@@ -2,12 +2,14 @@ api_version = '0.1'
 
 libpastry_sources = [
   'libpastry.c',
+  'pastry-util.c',
   'pastry-animation.c',
 ]
 
 libpastry_headers = [
   'libpastry-version-macros.h',
   'libpastry.h',
+  'pastry-util.h',
   'pastry-animation.h',
 ]
 
