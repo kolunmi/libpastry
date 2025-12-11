@@ -29,7 +29,7 @@ configure_file(
 )
 
 libpastry_deps = [
-  dependency('gtk4'),
+  dependency('gtk4', version: '>=4.20'),
 ]
 
 subdir('stylesheet')

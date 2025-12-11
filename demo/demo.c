@@ -61,7 +61,6 @@ on_activate (GtkApplication *app)
       label = gtk_label_new ("Hello World!");
       gtk_box_append (GTK_BOX (box), label);
 
-      gtk_widget_set_vexpand (label, TRUE);
       gtk_widget_add_css_class (label, "title-1");
     }
 
@@ -71,7 +70,23 @@ on_activate (GtkApplication *app)
       button = gtk_button_new_with_label ("Hello World!");
       gtk_box_append (GTK_BOX (box), button);
 
-      gtk_widget_add_css_class (button, "title-1");
+      gtk_widget_add_css_class (button, "title-2");
+    }
+    {
+      GtkWidget *button = NULL;
+
+      button = gtk_button_new_with_label ("Hello World!");
+      gtk_box_append (GTK_BOX (box), button);
+
+      gtk_widget_add_css_class (button, "title-3");
+    }
+    {
+      GtkWidget *button = NULL;
+
+      button = gtk_button_new_with_label ("Hello World!");
+      gtk_box_append (GTK_BOX (box), button);
+
+      gtk_widget_add_css_class (button, "title-4");
     }
   }
 

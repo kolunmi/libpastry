@@ -7,23 +7,31 @@ if not sassc.found()
 endif
 
 sassc_opts = [ '-a', '-M', '-t', 'compact' ]
-scss_deps = files([
+pastry_scss_files = files([
+  '_colors-public.scss',
   '_colors.scss',
   '_common.scss',
-  '_compat-colors.scss',
   '_drawing.scss',
-  '_palette.scss',
+  '_main.scss',
 ])
 
-stylesheet_deps += custom_target(
-  'gtk.scss',
-  input: 'gtk.scss',
-  output: 'gtk.css',
-  command: [
-    sassc, sassc_opts, '@INPUT@', '@OUTPUT@',
-  ],
-  depend_files: scss_deps,
-)
+pastry_theme_variants = [
+  'light',
+  'dark',
+  'hc',
+  'hc-dark',
+]
+pastry_theme_deps = []
+foreach variant: pastry_theme_variants
+  pastry_theme_deps += custom_target('Pastry theme variant ' + variant,
+    input: '@0@.scss'.format(variant),
+    output: '@0@.css'.format(variant),
+    command: [
+      sassc, sassc_opts, '@INPUT@', '@OUTPUT@',
+    ],
+    depend_files: pastry_scss_files,
+  )
+endforeach
 
 libpastry_stylesheet_resources = gnome.compile_resources(
   'pastry-stylesheet-resources',
@@ -34,6 +42,6 @@ libpastry_stylesheet_resources = gnome.compile_resources(
     meson.current_build_dir(),
     meson.current_source_dir(),
   ],
-  dependencies: stylesheet_deps,
+  dependencies: pastry_theme_deps,
   c_name: 'pastry_stylesheet',
 )
