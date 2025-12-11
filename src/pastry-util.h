@@ -65,7 +65,13 @@ pastry_get_valist (gpointer    object,
     va_end (var_args);                                               \
                                                                      \
     if (result)                                                      \
-      return g_value_##_get (&value);                                \
+      {                                                              \
+        _type tmp = (_orelse);                                       \
+                                                                     \
+        tmp = g_value_##_get (&value);                               \
+        g_value_unset (&value);                                      \
+        return tmp;                                                  \
+      }                                                              \
     else                                                             \
       return (_orelse);                                              \
   }
