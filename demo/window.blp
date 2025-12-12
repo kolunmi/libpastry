@@ -1,0 +1,73 @@
+using Gtk 4.0;
+
+Box root {
+  orientation: horizontal;
+
+  Box {
+    valign: center;
+    orientation: vertical;
+
+    margin-start: 10;
+    margin-end: 10;
+    margin-top: 10;
+    margin-bottom: 10;
+    spacing: 10;
+
+    Image {
+      pixel-size: 64;
+      resource: "/io/github/kolunmi/PastryDemo/cr_home.png";
+    }
+    Image {
+      pixel-size: 64;
+      resource: "/io/github/kolunmi/PastryDemo/cr_library.png";
+    }
+    Image {
+      pixel-size: 64;
+      resource: "/io/github/kolunmi/PastryDemo/cr_media.png";
+    }
+    Image {
+      pixel-size: 64;
+      resource: "/io/github/kolunmi/PastryDemo/cr_news.png";
+    }
+    Image {
+      pixel-size: 64;
+      resource: "/io/github/kolunmi/PastryDemo/cr_notes.png";
+    }
+    Image {
+      pixel-size: 64;
+      resource: "/io/github/kolunmi/PastryDemo/cr_profile.png";
+    }
+    Image {
+      pixel-size: 64;
+      resource: "/io/github/kolunmi/PastryDemo/cr_settings.png";
+    }
+  }
+
+  FlowBox {
+    valign: start;
+    selection-mode: none;
+    column-spacing: 7;
+    row-spacing: 7;
+
+    FlowBoxChild {
+      focusable: false;
+      Label {
+        label: "Label";
+      }
+    }
+
+    FlowBoxChild {
+      focusable: false;
+      Button {
+        label: "Button";
+      }
+    }
+
+    FlowBoxChild {
+      focusable: false;
+      Entry {
+        placeholder-text: "Text Entry";
+      }
+    }
+  }
+}

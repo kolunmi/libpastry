@@ -40,55 +40,16 @@ main (int argc, char **argv)
 static void
 on_activate (GtkApplication *app)
 {
-  GtkWidget *window = NULL;
+  GtkWidget *window              = NULL;
+  GtkWidget *root                = NULL;
+  g_autoptr (GtkBuilder) builder = NULL;
 
   window = gtk_application_window_new (app);
 
-  {
-    GtkWidget *box = NULL;
+  builder = gtk_builder_new ();
+  gtk_builder_add_from_resource (builder, "/io/github/kolunmi/PastryDemo/window.ui", NULL);
+  root = GTK_WIDGET (gtk_builder_get_object (builder, "root"));
 
-    box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
-    gtk_window_set_child (GTK_WINDOW (window), box);
-
-    gtk_widget_set_margin_start (box, 5);
-    gtk_widget_set_margin_end (box, 5);
-    gtk_widget_set_margin_top (box, 5);
-    gtk_widget_set_margin_bottom (box, 5);
-
-    {
-      GtkWidget *label = NULL;
-
-      label = gtk_label_new ("Hello World!");
-      gtk_box_append (GTK_BOX (box), label);
-
-      gtk_widget_add_css_class (label, "title-1");
-    }
-
-    {
-      GtkWidget *button = NULL;
-
-      button = gtk_button_new_with_label ("Hello World!");
-      gtk_box_append (GTK_BOX (box), button);
-
-      gtk_widget_add_css_class (button, "title-2");
-    }
-    {
-      GtkWidget *button = NULL;
-
-      button = gtk_button_new_with_label ("Hello World!");
-      gtk_box_append (GTK_BOX (box), button);
-
-      gtk_widget_add_css_class (button, "title-3");
-    }
-    {
-      GtkWidget *button = NULL;
-
-      button = gtk_button_new_with_label ("Hello World!");
-      gtk_box_append (GTK_BOX (box), button);
-
-      gtk_widget_add_css_class (button, "title-4");
-    }
-  }
-
+  gtk_window_set_child (GTK_WINDOW (window), g_object_ref_sink (root));
   gtk_window_present (GTK_WINDOW (window));
 }
