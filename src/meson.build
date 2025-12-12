@@ -4,13 +4,14 @@ libpastry_sources = [
   'libpastry.c',
   'pastry-util.c',
   'pastry-animation.c',
+  'pastry-spinner.c',
 ]
 
 libpastry_headers = [
   'libpastry-version-macros.h',
   'libpastry.h',
-  'pastry-util.h',
   'pastry-animation.h',
+  'pastry-spinner.h',
 ]
 
 version_split = meson.project_version().split('.')
@@ -29,6 +30,7 @@ configure_file(
 )
 
 libpastry_deps = [
+  cc.find_library('m', required: true),
   dependency('gtk4', version: '>=4.20'),
 ]
 
