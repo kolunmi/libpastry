@@ -5,6 +5,7 @@ libpastry_sources = [
   'pastry-util.c',
   'pastry-animation.c',
   'pastry-spinner.c',
+  'pastry-grid-spinner.c',
 ]
 
 libpastry_headers = [
@@ -12,6 +13,7 @@ libpastry_headers = [
   'libpastry.h',
   'pastry-animation.h',
   'pastry-spinner.h',
+  'pastry-grid-spinner.h',
 ]
 
 version_split = meson.project_version().split('.')

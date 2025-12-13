@@ -50,6 +50,7 @@ pastry_init (void)
 
   g_type_ensure (PASTRY_TYPE_ANIMATION);
   g_type_ensure (PASTRY_TYPE_SPINNER);
+  g_type_ensure (PASTRY_TYPE_GRID_SPINNER);
 
   if (!initialized)
     {
