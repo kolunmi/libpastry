@@ -23,6 +23,11 @@
 static void
 on_activate (GtkApplication *app);
 
+static void
+set_theme_cb (GtkDropDown *drop_down,
+              GParamSpec  *pspec,
+              gpointer     user_data);
+
 int
 main (int argc, char **argv)
 {
@@ -40,16 +45,65 @@ main (int argc, char **argv)
 static void
 on_activate (GtkApplication *app)
 {
-  GtkWidget *window              = NULL;
-  GtkWidget *root                = NULL;
-  g_autoptr (GtkBuilder) builder = NULL;
+  GtkWidget *window                 = NULL;
+  GtkWidget *root                   = NULL;
+  g_autoptr (GtkBuilder) builder    = NULL;
+  g_autoptr (GtkBuilderScope) scope = NULL;
 
   window = gtk_application_window_new (app);
 
+  scope = gtk_builder_cscope_new ();
+  gtk_builder_cscope_add_callback (scope, set_theme_cb);
+
   builder = gtk_builder_new ();
+  gtk_builder_set_scope (builder, scope);
   gtk_builder_add_from_resource (builder, "/io/github/kolunmi/PastryDemo/window.ui", NULL);
   root = GTK_WIDGET (gtk_builder_get_object (builder, "root"));
 
   gtk_window_set_child (GTK_WINDOW (window), g_object_ref_sink (root));
   gtk_window_present (GTK_WINDOW (window));
+}
+
+static void
+set_theme_cb (GtkDropDown *drop_down,
+              GParamSpec  *pspec,
+              gpointer     user_data)
+{
+  GtkStringObject *string = NULL;
+  const char      *name   = NULL;
+  const char      *accent = NULL;
+
+  string = gtk_drop_down_get_selected_item (drop_down);
+  name   = gtk_string_object_get_string (string);
+
+  if (name != NULL)
+    {
+      if (g_strcmp0 (name, "Default") == 0)
+        accent = "#dfdfe7";
+      else if (g_strcmp0 (name, "Purple") == 0)
+        accent = "#9c63dd";
+      else if (g_strcmp0 (name, "Blue") == 0)
+        accent = "#0fb6ff";
+      else if (g_strcmp0 (name, "Red") == 0)
+        accent = "#f42634";
+      else if (g_strcmp0 (name, "Pink") == 0)
+        accent = "#ff8ed7";
+      else if (g_strcmp0 (name, "Orange") == 0)
+        accent = "#ff8600";
+    }
+
+  if (accent != NULL)
+    {
+      g_autoptr (PastryTheme) theme = NULL;
+      PastrySettings *settings      = NULL;
+
+      theme = g_object_new (
+          PASTRY_TYPE_THEME,
+          "name", name,
+          "accent", accent,
+          NULL);
+
+      settings = pastry_settings_get_default ();
+      pastry_settings_set_theme (settings, theme);
+    }
 }
