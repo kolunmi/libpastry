@@ -28,6 +28,7 @@ G_BEGIN_DECLS
 #include "libpastry-version-macros.h"
 #include "pastry-animation.h"
 #include "pastry-grid-spinner.h"
+#include "pastry-property-trail.h"
 #include "pastry-settings.h"
 #include "pastry-spinner.h"
 #include "pastry-theme.h"

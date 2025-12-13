@@ -23,7 +23,9 @@
 #include "config.h"
 
 #include "pastry-grid-spinner.h"
+#include "pastry-property-trail.h"
 #include "pastry-settings.h"
+#include "pastry-util.h"
 
 #define GAP_SIZE 0.5
 
@@ -44,15 +46,27 @@ struct _PastryGridSpinner
   double speed;
 
   double modulated;
+
+  PastryPropertyTrail *accent_trail;
 };
 G_DEFINE_FINAL_TYPE (PastryGridSpinner, pastry_grid_spinner, GTK_TYPE_WIDGET)
+
+static void
+accent_changed_cb (PastryGridSpinner   *self,
+                   PastryTheme         *theme,
+                   PastryPropertyTrail *trail);
 
 static void
 dispose (GObject *object)
 {
   PastryGridSpinner *self = PASTRY_GRID_SPINNER (object);
 
-  (void) self;
+  g_signal_handlers_disconnect_by_func (
+      self->accent_trail, accent_changed_cb, self);
+
+  pastry_clear_pointers (
+      &self->accent_trail, g_object_unref,
+      NULL);
 
   G_OBJECT_CLASS (pastry_grid_spinner_parent_class)->dispose (object);
 }
@@ -218,6 +232,13 @@ pastry_grid_spinner_init (PastryGridSpinner *self)
   self->speed = 1.0;
 
   gtk_widget_add_tick_callback (GTK_WIDGET (self), (GtkTickCallback) tick_cb, NULL, NULL);
+
+  self->accent_trail = pastry_property_trail_new (
+      pastry_settings_get_default (),
+      "theme", "accent", NULL);
+  g_signal_connect_swapped (
+      self->accent_trail, "changed",
+      G_CALLBACK (accent_changed_cb), self);
 }
 
 void
@@ -238,4 +259,12 @@ pastry_grid_spinner_get_speed (PastryGridSpinner *self)
 {
   g_return_val_if_fail (PASTRY_IS_GRID_SPINNER (self), 0.0);
   return self->speed;
+}
+
+static void
+accent_changed_cb (PastryGridSpinner   *self,
+                   PastryTheme         *theme,
+                   PastryPropertyTrail *trail)
+{
+  gtk_widget_queue_draw (GTK_WIDGET (self));
 }

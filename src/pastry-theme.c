@@ -29,8 +29,8 @@ enum
 {
   PROP_0,
 
-  PROP_ACCENT,
   PROP_NAME,
+  PROP_ACCENT,
 
   LAST_PROP
 };

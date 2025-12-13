@@ -3,6 +3,7 @@ api_version = '0.1'
 libpastry_sources = [
   'libpastry.c',
   'pastry-util.c',
+  'pastry-property-trail.c',
   'pastry-settings.c',
   'pastry-theme.c',
   'pastry-animation.c',
@@ -13,6 +14,7 @@ libpastry_sources = [
 libpastry_headers = [
   'libpastry-version-macros.h',
   'libpastry.h',
+  'pastry-property-trail.h',
   'pastry-settings.h',
   'pastry-theme.h',
   'pastry-animation.h',
@@ -73,7 +75,7 @@ gnome = import('gnome')
 libpastry_gir = gnome.generate_gir(libpastry_lib,
               sources: [libpastry_sources, files('libpastry.h')],
                header: 'libpastry.h',
-      export_packages: 'libpastry-' + api_version,
+      export_packages: 'Pastry-' + api_version,
             nsversion: api_version,
             namespace: 'pastry',
         symbol_prefix: 'pastry',
