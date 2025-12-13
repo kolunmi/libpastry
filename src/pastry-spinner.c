@@ -29,6 +29,7 @@ enum
   PROP_0,
 
   PROP_SPEED,
+  PROP_N_DOTS,
 
   LAST_PROP
 };
@@ -39,6 +40,7 @@ struct _PastrySpinner
   GtkWidget parent_instance;
 
   double speed;
+  int    n_dots;
 
   double modulated;
 };
@@ -67,6 +69,9 @@ get_property (GObject    *object,
     case PROP_SPEED:
       g_value_set_double (value, pastry_spinner_get_speed (self));
       break;
+    case PROP_N_DOTS:
+      g_value_set_int (value, pastry_spinner_get_n_dots (self));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
@@ -84,6 +89,9 @@ set_property (GObject      *object,
     {
     case PROP_SPEED:
       pastry_spinner_set_speed (self, g_value_get_double (value));
+      break;
+    case PROP_N_DOTS:
+      pastry_spinner_set_n_dots (self, g_value_get_int (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -123,9 +131,7 @@ snapshot (GtkWidget   *widget,
       snapshot,
       &GRAPHENE_POINT_INIT ((int) (width / 2), (int) (height / 2)));
 
-#define N_DOTS 8
-
-  for (guint i = 0; i < N_DOTS; i++)
+  for (guint i = 0; i < self->n_dots; i++)
     {
       graphene_rect_t  bounds          = { 0 };
       graphene_point_t center          = { 0 };
@@ -141,9 +147,9 @@ snapshot (GtkWidget   *widget,
       stops[1].offset = 0.15;
       stops[2].color  = (GdkRGBA) { 0.0, 0.0, 0.0, 0.0 };
 
-      circle_progress = self->modulated * (double) N_DOTS;
-      if (i == 0 && circle_progress > (double) (N_DOTS - 1))
-        circle_progress -= (double) N_DOTS;
+      circle_progress = self->modulated * (double) self->n_dots;
+      if (i == 0 && circle_progress > (double) (self->n_dots - 1))
+        circle_progress -= (double) self->n_dots;
       stops[2].offset = 1.0 - MIN (0.75, 0.75 * ABS ((double) i - circle_progress));
 
       gtk_snapshot_append_radial_gradient (
@@ -152,7 +158,7 @@ snapshot (GtkWidget   *widget,
           0.0, 1.0,
           stops, G_N_ELEMENTS (stops));
 
-      gtk_snapshot_rotate (snapshot, 360.0 / (double) N_DOTS);
+      gtk_snapshot_rotate (snapshot, 360.0 / (double) self->n_dots);
     }
 
   gtk_snapshot_restore (snapshot);
@@ -175,11 +181,19 @@ pastry_spinner_class_init (PastrySpinnerClass *klass)
           0.0, G_MAXDOUBLE, 1.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
+  props[PROP_N_DOTS] =
+      g_param_spec_int (
+          "n-dots",
+          NULL, NULL,
+          1, 16, 8,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
   widget_class->measure  = measure;
   widget_class->snapshot = snapshot;
 
   g_object_class_install_properties (object_class, LAST_PROP, props);
 }
+
 static gboolean
 tick_cb (PastrySpinner *self,
          GdkFrameClock *frame_clock,
@@ -202,7 +216,8 @@ tick_cb (PastrySpinner *self,
 static void
 pastry_spinner_init (PastrySpinner *self)
 {
-  self->speed = 1.0;
+  self->speed  = 1.0;
+  self->n_dots = 8;
 
   gtk_widget_add_tick_callback (GTK_WIDGET (self), (GtkTickCallback) tick_cb, NULL, NULL);
 }
@@ -225,4 +240,25 @@ pastry_spinner_get_speed (PastrySpinner *self)
 {
   g_return_val_if_fail (PASTRY_IS_SPINNER (self), 0.0);
   return self->speed;
+}
+
+void
+pastry_spinner_set_n_dots (PastrySpinner *self,
+                           int            n_dots)
+{
+  g_return_if_fail (PASTRY_IS_SPINNER (self));
+
+  if (n_dots == self->n_dots)
+    return;
+  self->n_dots = n_dots;
+
+  gtk_widget_queue_draw (GTK_WIDGET (self));
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_N_DOTS]);
+}
+
+int
+pastry_spinner_get_n_dots (PastrySpinner *self)
+{
+  g_return_val_if_fail (PASTRY_IS_SPINNER (self), 0.0);
+  return self->n_dots;
 }

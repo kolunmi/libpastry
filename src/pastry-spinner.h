@@ -38,4 +38,11 @@ pastry_spinner_set_speed (PastrySpinner *self,
 double
 pastry_spinner_get_speed (PastrySpinner *self);
 
+void
+pastry_spinner_set_n_dots (PastrySpinner *self,
+                           int            n_dots);
+
+int
+pastry_spinner_get_n_dots (PastrySpinner *self);
+
 G_END_DECLS
