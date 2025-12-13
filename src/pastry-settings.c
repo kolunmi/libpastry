@@ -146,6 +146,8 @@ pastry_copy_accent_rgba (GdkRGBA *rgba)
   PastrySettings *settings = NULL;
   PastryTheme    *theme    = NULL;
 
+  g_return_if_fail (rgba != NULL);
+
   settings = pastry_settings_get_default ();
   theme    = pastry_settings_get_theme (settings);
 
