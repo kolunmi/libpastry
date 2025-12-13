@@ -3,8 +3,8 @@
 
 $base_color: if($variant == 'light', #ffffff, lighten(desaturate(#241f31, 100%), 2%));
 $text_color: if($variant == 'light', black, white);
-$bg_color: if($variant == 'light', #dfdfe7, darken(#dfdfe7, 50%));
-$fg_color: if($variant == 'light', #5a5753, #eeeeec);
+$bg_color: if($variant == 'light', #dfdfe7, #5a524b);
+$fg_color: if($variant == 'light', #5a5753, #dfdfe7);
 
 $selected_fg_color: #ffffff;
 $selected_bg_color: if($variant == 'light', #ff9daa, darken(#3584e4, 20%));
