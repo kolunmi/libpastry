@@ -318,6 +318,9 @@ dig (PastryPropertyTrail *self)
               g_object_get (object, property, &tmp, NULL);
               g_clear_object (&object);
               object = g_steal_pointer (&tmp);
+
+              if (object == NULL)
+                break;
             }
           else
             {
