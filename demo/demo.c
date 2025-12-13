@@ -82,6 +82,8 @@ set_theme_cb (GtkDropDown *drop_down,
         accent = "#dfdfe7";
       else if (g_strcmp0 (name, "Purple") == 0)
         accent = "#9c63dd";
+      else if (g_strcmp0 (name, "Green") == 0)
+        accent = "#28c900";
       else if (g_strcmp0 (name, "Blue") == 0)
         accent = "#0fb6ff";
       else if (g_strcmp0 (name, "Red") == 0)
