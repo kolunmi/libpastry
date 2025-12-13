@@ -24,6 +24,8 @@
 #error "Only <libpastry.h> can be included directly."
 #endif
 
+#include "libpastry-version-macros.h"
+
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
@@ -31,10 +33,12 @@ G_BEGIN_DECLS
 #define PASTRY_TYPE_GRID_SPINNER (pastry_grid_spinner_get_type ())
 G_DECLARE_FINAL_TYPE (PastryGridSpinner, pastry_grid_spinner, PASTRY, GRID_SPINNER, GtkWidget)
 
+LIBPASTRY_AVAILABLE_IN_ALL
 void
 pastry_grid_spinner_set_speed (PastryGridSpinner *self,
                                double             speed);
 
+LIBPASTRY_AVAILABLE_IN_ALL
 double
 pastry_grid_spinner_get_speed (PastryGridSpinner *self);
 

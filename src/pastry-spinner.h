@@ -24,6 +24,8 @@
 #error "Only <libpastry.h> can be included directly."
 #endif
 
+#include "libpastry-version-macros.h"
+
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
@@ -31,17 +33,21 @@ G_BEGIN_DECLS
 #define PASTRY_TYPE_SPINNER (pastry_spinner_get_type ())
 G_DECLARE_FINAL_TYPE (PastrySpinner, pastry_spinner, PASTRY, SPINNER, GtkWidget)
 
+LIBPASTRY_AVAILABLE_IN_ALL
 void
 pastry_spinner_set_speed (PastrySpinner *self,
                           double         speed);
 
+LIBPASTRY_AVAILABLE_IN_ALL
 double
 pastry_spinner_get_speed (PastrySpinner *self);
 
+LIBPASTRY_AVAILABLE_IN_ALL
 void
 pastry_spinner_set_n_dots (PastrySpinner *self,
                            int            n_dots);
 
+LIBPASTRY_AVAILABLE_IN_ALL
 int
 pastry_spinner_get_n_dots (PastrySpinner *self);
 
