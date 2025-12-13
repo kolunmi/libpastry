@@ -23,6 +23,7 @@
 #include "config.h"
 
 #include "pastry-grid-spinner.h"
+#include "pastry-settings.h"
 
 #define GAP_SIZE 0.5
 
@@ -127,10 +128,13 @@ snapshot (GtkWidget   *widget,
   PastryGridSpinner *self   = PASTRY_GRID_SPINNER (widget);
   int                width  = 0;
   int                height = 0;
+  GdkRGBA            accent = { 0 };
   double             scale  = 0.0;
 
   width  = gtk_widget_get_width (GTK_WIDGET (self));
   height = gtk_widget_get_height (GTK_WIDGET (self));
+
+  pastry_copy_accent_rgba (&accent);
 
   gtk_snapshot_save (snapshot);
   gtk_snapshot_translate (
@@ -152,12 +156,15 @@ snapshot (GtkWidget   *widget,
 
       gtk_snapshot_append_color (
           snapshot,
-          &(GdkRGBA) { 1.0, 0.55, 0.45, alpha },
+          &(GdkRGBA) { accent.red,
+                       accent.green,
+                       accent.blue,
+                       accent.alpha * alpha },
           rects + i);
     }
   gtk_snapshot_append_color (
       snapshot,
-      &(GdkRGBA) { 1.0, 0.55, 0.45, 1.0 },
+      &accent,
       &GRAPHENE_RECT_INIT (-0.5, -0.5, 1.0, 1.0));
 
   gtk_snapshot_restore (snapshot);

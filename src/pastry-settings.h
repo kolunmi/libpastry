@@ -1,4 +1,4 @@
-/* libpastry.h
+/* pastry-settings.h
  *
  * Copyright 2025 Eva M
  *
@@ -20,21 +20,33 @@
 
 #pragma once
 
-#include <gtk/gtk.h>
+#ifndef LIBPASTRY_INSIDE
+#error "Only <libpastry.h> can be included directly."
+#endif
+
+#include "libpastry-version-macros.h"
+
+#include <pastry-theme.h>
 
 G_BEGIN_DECLS
 
-#define LIBPASTRY_INSIDE
-#include "libpastry-version-macros.h"
-#include "pastry-animation.h"
-#include "pastry-grid-spinner.h"
-#include "pastry-settings.h"
-#include "pastry-spinner.h"
-#include "pastry-theme.h"
-#undef LIBPASTRY_INSIDE
+#define PASTRY_TYPE_SETTINGS (pastry_settings_get_type ())
+G_DECLARE_FINAL_TYPE (PastrySettings, pastry_settings, PASTRY, SETTINGS, GObject)
+
+LIBPASTRY_AVAILABLE_IN_ALL
+PastrySettings *
+pastry_settings_get_default (void);
 
 LIBPASTRY_AVAILABLE_IN_ALL
 void
-pastry_init (void);
+pastry_copy_accent_rgba (GdkRGBA *rgba);
+
+LIBPASTRY_AVAILABLE_IN_ALL
+void
+pastry_settings_set_theme (PastrySettings *self,
+                           PastryTheme    *theme);
+LIBPASTRY_AVAILABLE_IN_ALL
+PastryTheme *
+pastry_settings_get_theme (PastrySettings *self);
 
 G_END_DECLS

@@ -22,6 +22,7 @@
 
 #include "config.h"
 
+#include "pastry-settings.h"
 #include "pastry-spinner.h"
 
 enum
@@ -122,9 +123,12 @@ snapshot (GtkWidget   *widget,
   PastrySpinner *self   = PASTRY_SPINNER (widget);
   int            width  = 0;
   int            height = 0;
+  GdkRGBA        accent = { 0 };
 
   width  = gtk_widget_get_width (GTK_WIDGET (self));
   height = gtk_widget_get_height (GTK_WIDGET (self));
+
+  pastry_copy_accent_rgba (&accent);
 
   gtk_snapshot_save (snapshot);
   gtk_snapshot_translate (
@@ -141,9 +145,9 @@ snapshot (GtkWidget   *widget,
       bounds = GRAPHENE_RECT_INIT (-15.0, -(int) (height / 2), 30.0, 30.0);
       graphene_rect_get_center (&bounds, &center);
 
-      stops[0].color  = (GdkRGBA) { 1.0, 0.55, 0.45, 1.0 };
+      stops[0].color  = accent;
       stops[0].offset = 0.0;
-      stops[1].color  = (GdkRGBA) { 1.0, 0.55, 0.45, 1.0 };
+      stops[1].color  = accent;
       stops[1].offset = 0.15;
       stops[2].color  = (GdkRGBA) { 0.0, 0.0, 0.0, 0.0 };
 

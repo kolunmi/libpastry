@@ -3,6 +3,8 @@ api_version = '0.1'
 libpastry_sources = [
   'libpastry.c',
   'pastry-util.c',
+  'pastry-settings.c',
+  'pastry-theme.c',
   'pastry-animation.c',
   'pastry-spinner.c',
   'pastry-grid-spinner.c',
@@ -11,6 +13,8 @@ libpastry_sources = [
 libpastry_headers = [
   'libpastry-version-macros.h',
   'libpastry.h',
+  'pastry-settings.h',
+  'pastry-theme.h',
   'pastry-animation.h',
   'pastry-spinner.h',
   'pastry-grid-spinner.h',
