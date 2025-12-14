@@ -18,6 +18,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/**
+ * PastrySettings:
+ *
+ * Manages the libpastry context.
+ */
+
 #define G_LOG_DOMAIN "PASTRY::SETTINGS"
 
 #include "config.h"
@@ -164,6 +170,11 @@ pastry_settings_class_init (PastrySettingsClass *klass)
   object_class->get_property = get_property;
   object_class->dispose      = dispose;
 
+  /**
+   * PastrySettings:theme:
+   *
+   * The active theme for the context.
+   */
   props[PROP_THEME] =
       g_param_spec_object (
           "theme",
@@ -180,6 +191,13 @@ pastry_settings_init (PastrySettings *self)
   init_portal (self);
 }
 
+/**
+ * pastry_settings_get_default:
+ *
+ * Gets the default global `PastrySettings`.
+ *
+ * Returns: (transfer none): a `PastrySettings`.
+ */
 PastrySettings *
 pastry_settings_get_default (void)
 {
@@ -206,6 +224,12 @@ pastry_settings_get_default (void)
   return settings;
 }
 
+/**
+ * pastry_copy_accent_rgba:
+ *
+ * Convenience function to get the accent color of the main `PastryTheme` for
+ * the default `PastrySettings`.
+ */
 void
 pastry_copy_accent_rgba (GdkRGBA *rgba)
 {
@@ -223,6 +247,13 @@ pastry_copy_accent_rgba (GdkRGBA *rgba)
     *rgba = (GdkRGBA) { 0 };
 }
 
+/**
+ * pastry_settings_set_theme:
+ * @self: a `PastrySettings`
+ * @theme: a `PastryTheme`
+ *
+ * Sets the theme.
+ */
 void
 pastry_settings_set_theme (PastrySettings *self,
                            PastryTheme    *theme)
@@ -239,6 +270,14 @@ pastry_settings_set_theme (PastrySettings *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_THEME]);
 }
 
+/**
+ * pastry_settings_get_theme:
+ * @self: a `PastrySettings`
+ *
+ * Gets the theme object of @self.
+ *
+ * Returns: (nullable) (transfer none): the theme object of @self
+ */
 PastryTheme *
 pastry_settings_get_theme (PastrySettings *self)
 {

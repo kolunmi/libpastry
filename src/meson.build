@@ -12,7 +12,6 @@ libpastry_sources = [
 ]
 
 libpastry_headers = [
-  'libpastry-version-macros.h',
   'libpastry.h',
   'pastry-property-trail.h',
   'pastry-settings.h',
@@ -57,29 +56,37 @@ libpastry_dep = declare_dependency(
   include_directories : include_directories('..', '.'),
 )
 
-install_headers(libpastry_headers, subdir: 'libpastry')
+install_headers(
+  libpastry_headers + files('libpastry-version-macros.h'),
+  subdir: 'libpastry')
 
 pkg = import('pkgconfig')
 pkg.generate(
-  description: 'A shared library for ...',
+  description: 'A shared library for libpastry',
     libraries: libpastry_lib,
          name: 'libpastry',
      filebase: 'libpastry-' + api_version,
       version: meson.project_version(),
       subdirs: 'libpastry',
-     requires: 'gio-2.0',
+     requires: 'gtk4',
   install_dir: get_option('libdir') / 'pkgconfig'
 )
 
 gnome = import('gnome')
+
+gir_args = [
+  '--quiet',
+  '--doc-format=gi-docgen',
+]
 libpastry_gir = gnome.generate_gir(libpastry_lib,
-              sources: [libpastry_sources, files('libpastry.h')],
+              sources: [libpastry_sources, libpastry_headers],
                header: 'libpastry.h',
       export_packages: 'Pastry-' + api_version,
             nsversion: api_version,
             namespace: 'pastry',
         symbol_prefix: 'pastry',
     identifier_prefix: 'pastry',
+           extra_args: gir_args,
              includes: ['Gtk-4.0'],
               install: true,
 )
