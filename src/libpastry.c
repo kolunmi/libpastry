@@ -35,8 +35,11 @@ pastry_init (void)
   gtk_init ();
 
   g_type_ensure (PASTRY_TYPE_ANIMATION);
-  g_type_ensure (PASTRY_TYPE_SPINNER);
   g_type_ensure (PASTRY_TYPE_GRID_SPINNER);
+  g_type_ensure (PASTRY_TYPE_PROPERTY_TRAIL);
+  g_type_ensure (PASTRY_TYPE_SETTINGS);
+  g_type_ensure (PASTRY_TYPE_SPINNER);
+  g_type_ensure (PASTRY_TYPE_THEME);
 
   (void) pastry_settings_get_default ();
 }
