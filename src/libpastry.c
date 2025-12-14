@@ -21,18 +21,6 @@
 #define G_LOG_DOMAIN "PASTRY::CORE"
 
 #include "libpastry.h"
-#include "pastry-util.h"
-
-typedef struct
-{
-  GdkDisplay     *display;
-  GtkCssProvider *light;
-  GtkCssProvider *dark;
-  GtkCssProvider *hc_light;
-  GtkCssProvider *hc_dark;
-} CssProviders;
-
-static CssProviders global = { 0 };
 
 /**
  * pastry_init:
@@ -44,45 +32,11 @@ static CssProviders global = { 0 };
 void
 pastry_init (void)
 {
-  static gboolean initialized = FALSE;
-
   gtk_init ();
 
   g_type_ensure (PASTRY_TYPE_ANIMATION);
   g_type_ensure (PASTRY_TYPE_SPINNER);
   g_type_ensure (PASTRY_TYPE_GRID_SPINNER);
 
-  if (!initialized)
-    {
-      GdkDisplay *display = NULL;
-
-      global.display  = g_object_ref (gdk_display_get_default ());
-      global.light    = gtk_css_provider_new ();
-      global.dark     = gtk_css_provider_new ();
-      global.hc_light = gtk_css_provider_new ();
-      global.hc_dark  = gtk_css_provider_new ();
-
-      gtk_css_provider_load_from_resource (
-          global.light,
-          "/org/gtk/libgtk/theme/Pastry/gtk.css");
-      gtk_css_provider_load_from_resource (
-          global.dark,
-          "/org/gtk/libgtk/theme/Pastry/gtk-dark.css");
-      gtk_css_provider_load_from_resource (
-          global.hc_light,
-          "/org/gtk/libgtk/theme/Pastry/gtk-hc.css");
-      gtk_css_provider_load_from_resource (
-          global.hc_dark,
-          "/org/gtk/libgtk/theme/Pastry/gtk-hc-dark.css");
-      g_info ("Loaded stylesheets");
-
-      /* TODO: listen to creation of displays */
-      display = gdk_display_get_default ();
-      gtk_style_context_add_provider_for_display (
-          display,
-          GTK_STYLE_PROVIDER (global.light),
-          GTK_STYLE_PROVIDER_PRIORITY_USER);
-
-      initialized = TRUE;
-    }
+  (void) pastry_settings_get_default ();
 }

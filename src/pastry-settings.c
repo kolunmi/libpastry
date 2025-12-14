@@ -40,16 +40,80 @@ struct _PastrySettings
   GObject parent_instance;
 
   PastryTheme *theme;
+
+  gboolean is_default;
+  struct
+  {
+    GdkDisplay *display;
+
+    GtkCssProvider *light;
+    GtkCssProvider *dark;
+    GtkCssProvider *hc_light;
+    GtkCssProvider *hc_dark;
+
+    GDBusProxy *settings_portal;
+    gboolean    portal_wants_dark;
+
+    GtkCssProvider *applied;
+  } default_state;
 };
 G_DEFINE_FINAL_TYPE (PastrySettings, pastry_settings, G_TYPE_OBJECT)
+
+static void
+init_default (PastrySettings *self);
+
+static void
+init_css (PastrySettings *self);
+
+/* Copied with modifications from libadwaita */
+#define PORTAL_BUS_NAME           "org.freedesktop.portal.Desktop"
+#define PORTAL_OBJECT_PATH        "/org/freedesktop/portal/desktop"
+#define PORTAL_SETTINGS_INTERFACE "org.freedesktop.portal.Settings"
+#define PORTAL_ERROR_NOT_FOUND    "org.freedesktop.portal.Error.NotFound"
+static void
+init_portal (PastrySettings *self);
+
+/* Copied with modifications from libadwaita */
+static void
+portal_changed_cb (PastrySettings *self,
+                   const char     *sender_name,
+                   const char     *signal_name,
+                   GVariant       *parameters,
+                   GDBusProxy     *proxy);
+
+/* Copied with modifications from libadwaita */
+static gboolean
+is_dark (GVariant *variant);
+
+/* Copied with modifications from libadwaita */
+static gboolean
+read_setting (PastrySettings *self,
+              const char     *schema,
+              const char     *name,
+              const char     *type,
+              GVariant      **out);
+
+static void
+apply_css (PastrySettings *self);
 
 static void
 dispose (GObject *object)
 {
   PastrySettings *self = PASTRY_SETTINGS (object);
 
+  if (self->default_state.applied != NULL)
+    gtk_style_context_remove_provider_for_display (
+        self->default_state.display,
+        GTK_STYLE_PROVIDER (self->default_state.applied));
+
   pastry_clear_pointers (
       &self->theme, g_object_unref,
+      &self->default_state.display, g_object_unref,
+      &self->default_state.light, g_object_unref,
+      &self->default_state.dark, g_object_unref,
+      &self->default_state.hc_light, g_object_unref,
+      &self->default_state.hc_dark, g_object_unref,
+      &self->default_state.settings_portal, g_object_unref,
       NULL);
 
   G_OBJECT_CLASS (pastry_settings_parent_class)->dispose (object);
@@ -113,6 +177,7 @@ pastry_settings_class_init (PastrySettingsClass *klass)
 static void
 pastry_settings_init (PastrySettings *self)
 {
+  init_portal (self);
 }
 
 PastrySettings *
@@ -135,6 +200,7 @@ pastry_settings_get_default (void)
           PASTRY_TYPE_SETTINGS,
           "theme", theme,
           NULL);
+      init_default (settings);
     }
 
   return settings;
@@ -178,4 +244,201 @@ pastry_settings_get_theme (PastrySettings *self)
 {
   g_return_val_if_fail (PASTRY_IS_SETTINGS (self), NULL);
   return self->theme;
+}
+
+static void
+init_default (PastrySettings *self)
+{
+  self->is_default = TRUE;
+
+  init_css (self);
+  init_portal (self);
+}
+
+static void
+init_css (PastrySettings *self)
+{
+  GdkDisplay *display = NULL;
+
+  /* TODO: listen to creation of displays */
+  display = gdk_display_get_default ();
+
+  self->default_state.display  = g_object_ref (display);
+  self->default_state.light    = gtk_css_provider_new ();
+  self->default_state.dark     = gtk_css_provider_new ();
+  self->default_state.hc_light = gtk_css_provider_new ();
+  self->default_state.hc_dark  = gtk_css_provider_new ();
+
+  gtk_css_provider_load_from_resource (
+      self->default_state.light,
+      "/org/gtk/libgtk/theme/Pastry/gtk.css");
+  gtk_css_provider_load_from_resource (
+      self->default_state.dark,
+      "/org/gtk/libgtk/theme/Pastry/gtk-dark.css");
+  gtk_css_provider_load_from_resource (
+      self->default_state.hc_light,
+      "/org/gtk/libgtk/theme/Pastry/gtk-hc.css");
+  gtk_css_provider_load_from_resource (
+      self->default_state.hc_dark,
+      "/org/gtk/libgtk/theme/Pastry/gtk-hc-dark.css");
+  g_info ("Loaded stylesheets");
+
+  apply_css (self);
+}
+
+static void
+init_portal (PastrySettings *self)
+{
+  g_autoptr (GError) error     = NULL;
+  g_autoptr (GVariant) variant = NULL;
+  gboolean was_read            = FALSE;
+
+  self->default_state.settings_portal = g_dbus_proxy_new_for_bus_sync (
+      G_BUS_TYPE_SESSION,
+      G_DBUS_PROXY_FLAGS_NONE,
+      NULL,
+      PORTAL_BUS_NAME,
+      PORTAL_OBJECT_PATH,
+      PORTAL_SETTINGS_INTERFACE,
+      NULL,
+      &error);
+
+  if (self->default_state.settings_portal == NULL)
+    {
+      g_debug ("Settings portal not found: %s", error->message);
+      return;
+    }
+
+  was_read = read_setting (self, "org.freedesktop.appearance",
+                           "color-scheme", "u", &variant);
+  if (was_read)
+    self->default_state.portal_wants_dark = is_dark (variant);
+  else
+    g_debug ("Could not read color scheme info from portal");
+
+  g_signal_connect_swapped (
+      self->default_state.settings_portal, "g-signal",
+      G_CALLBACK (portal_changed_cb), self);
+}
+
+static void
+portal_changed_cb (PastrySettings *self,
+                   const char     *sender_name,
+                   const char     *signal_name,
+                   GVariant       *parameters,
+                   GDBusProxy     *proxy)
+{
+  const char *namespace;
+  const char *name;
+  g_autoptr (GVariant) value = NULL;
+
+  if (g_strcmp0 (signal_name, "SettingChanged") != 0)
+    return;
+
+  g_variant_get (parameters, "(&s&sv)", &namespace, &name, &value);
+  if (g_strcmp0 (namespace, "org.freedesktop.appearance") == 0 &&
+      g_strcmp0 (name, "color-scheme") == 0)
+    {
+      self->default_state.portal_wants_dark = is_dark (value);
+      apply_css (self);
+    }
+}
+
+static gboolean
+is_dark (GVariant *variant)
+{
+  guint32 value = 0;
+
+  value = g_variant_get_uint32 (variant);
+  switch (value)
+    {
+    case 0:
+    case 2:
+      return FALSE;
+    case 1:
+      return TRUE;
+    default:
+      g_warning ("Invalid colorscheme from portal");
+      return FALSE;
+    }
+}
+
+static gboolean
+read_setting (PastrySettings *self,
+              const char     *schema,
+              const char     *name,
+              const char     *type,
+              GVariant      **out)
+{
+  g_autoptr (GError) local_error = NULL;
+  g_autoptr (GVariant) ret       = NULL;
+  g_autoptr (GVariant) child     = NULL;
+  g_autoptr (GVariant) child2    = NULL;
+  g_autoptr (GVariantType) out_type;
+
+  ret = g_dbus_proxy_call_sync (
+      self->default_state.settings_portal,
+      "Read",
+      g_variant_new ("(ss)", schema, name),
+      G_DBUS_CALL_FLAGS_NONE,
+      G_MAXINT,
+      NULL,
+      &local_error);
+
+  if (local_error != NULL)
+    {
+      if (local_error->domain == G_DBUS_ERROR &&
+          local_error->code == G_DBUS_ERROR_SERVICE_UNKNOWN)
+        g_warning ("Portal not found: %s", local_error->message);
+      else if (local_error->domain == G_DBUS_ERROR &&
+               local_error->code == G_DBUS_ERROR_UNKNOWN_METHOD)
+        g_warning ("Portal doesn't provide settings: %s", local_error->message);
+      else if (g_dbus_error_is_remote_error (local_error))
+        {
+          g_autofree char *remote_error = g_dbus_error_get_remote_error (local_error);
+
+          if (!g_strcmp0 (remote_error, PORTAL_ERROR_NOT_FOUND))
+            g_warning ("Setting %s.%s of type %s not found", schema, name, type);
+        }
+      else
+        g_warning ("Couldn't read the %s setting: %s", name, local_error->message);
+
+      return FALSE;
+    }
+
+  g_variant_get (ret, "(v)", &child);
+  g_variant_get (child, "v", &child2);
+
+  out_type = g_variant_type_new (type);
+  if (g_variant_type_equal (g_variant_get_type (child2), out_type))
+    {
+      *out = g_steal_pointer (&child2);
+      return TRUE;
+    }
+  else
+    {
+      g_critical ("Invalid type for %s.%s: expected %s, got %s",
+                  schema, name, type, g_variant_get_type_string (child2));
+      return FALSE;
+    }
+}
+
+static void
+apply_css (PastrySettings *self)
+{
+  if (self->default_state.applied != NULL)
+    gtk_style_context_remove_provider_for_display (
+        self->default_state.display,
+        GTK_STYLE_PROVIDER (self->default_state.applied));
+  g_clear_object (&self->default_state.applied);
+
+  if (self->default_state.portal_wants_dark)
+    self->default_state.applied = g_object_ref (self->default_state.dark);
+  else
+    self->default_state.applied = g_object_ref (self->default_state.light);
+
+  gtk_style_context_add_provider_for_display (
+      self->default_state.display,
+      GTK_STYLE_PROVIDER (self->default_state.applied),
+      GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
