@@ -121,7 +121,7 @@ pastry_get_valist (gpointer    object,
       if (cur_object == NULL)
         cur_object = object;
       else if (G_VALUE_HOLDS (&cur_value, G_TYPE_OBJECT))
-        cur_object = g_value_get_object (value);
+        cur_object = g_value_get_object (&cur_value);
       else
         {
           g_value_unset (&cur_value);

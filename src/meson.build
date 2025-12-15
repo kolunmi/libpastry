@@ -6,6 +6,8 @@ libpastry_sources = [
   'pastry-property-trail.c',
   'pastry-settings.c',
   'pastry-theme.c',
+  'pastry-visual-theme.c',
+  'pastry-sound-theme.c',
   'pastry-animation.c',
   'pastry-spinner.c',
   'pastry-grid-spinner.c',
@@ -16,6 +18,8 @@ libpastry_headers = [
   'pastry-property-trail.h',
   'pastry-settings.h',
   'pastry-theme.h',
+  'pastry-visual-theme.h',
+  'pastry-sound-theme.h',
   'pastry-animation.h',
   'pastry-spinner.h',
   'pastry-grid-spinner.h',
@@ -74,19 +78,19 @@ pkg.generate(
 
 gnome = import('gnome')
 
-gir_args = [
-  '--quiet',
-  '--doc-format=gi-docgen',
-]
-libpastry_gir = gnome.generate_gir(libpastry_lib,
-              sources: [libpastry_sources, libpastry_headers],
-               header: 'libpastry.h',
-      export_packages: 'Pastry-' + api_version,
-            nsversion: api_version,
-            namespace: 'pastry',
-        symbol_prefix: 'pastry',
-    identifier_prefix: 'pastry',
-           extra_args: gir_args,
-             includes: ['Gtk-4.0'],
-              install: true,
-)
+# gir_args = [
+#   '--quiet',
+#   '--doc-format=gi-docgen',
+# ]
+# libpastry_gir = gnome.generate_gir(libpastry_lib,
+#               sources: [libpastry_sources, libpastry_headers],
+#                header: 'libpastry.h',
+#       export_packages: 'Pastry-' + api_version,
+#             nsversion: api_version,
+#             namespace: 'pastry',
+#         symbol_prefix: 'pastry',
+#     identifier_prefix: 'pastry',
+#            extra_args: gir_args,
+#              includes: ['Gtk-4.0'],
+#               install: true,
+# )

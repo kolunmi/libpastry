@@ -235,7 +235,7 @@ pastry_grid_spinner_init (PastryGridSpinner *self)
 
   self->accent_trail = pastry_property_trail_new (
       pastry_settings_get_default (),
-      "theme", "accent", NULL);
+      "theme", "visual-theme", "accent", NULL);
   g_signal_connect_swapped (
       self->accent_trail, "changed",
       G_CALLBACK (accent_changed_cb), self);

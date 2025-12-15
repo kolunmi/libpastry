@@ -30,7 +30,8 @@ enum
   PROP_0,
 
   PROP_NAME,
-  PROP_ACCENT,
+  PROP_VISUAL_THEME,
+  PROP_SOUND_THEME,
 
   LAST_PROP
 };
@@ -41,9 +42,9 @@ struct _PastryTheme
   GObject parent_instance;
 
   char *name;
-  char *accent;
 
-  GdkRGBA accent_rgba;
+  PastryVisualTheme *visual_theme;
+  PastrySoundTheme  *sound_theme;
 };
 G_DEFINE_FINAL_TYPE (PastryTheme, pastry_theme, G_TYPE_OBJECT)
 
@@ -54,7 +55,8 @@ dispose (GObject *object)
 
   pastry_clear_pointers (
       &self->name, g_free,
-      &self->accent, g_free,
+      &self->visual_theme, g_object_unref,
+      &self->sound_theme, g_object_unref,
       NULL);
 
   G_OBJECT_CLASS (pastry_theme_parent_class)->dispose (object);
@@ -73,8 +75,11 @@ get_property (GObject    *object,
     case PROP_NAME:
       g_value_set_string (value, pastry_theme_get_name (self));
       break;
-    case PROP_ACCENT:
-      g_value_set_string (value, pastry_theme_get_accent (self));
+    case PROP_VISUAL_THEME:
+      g_value_set_object (value, pastry_theme_get_visual_theme (self));
+      break;
+    case PROP_SOUND_THEME:
+      g_value_set_object (value, pastry_theme_get_sound_theme (self));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -94,8 +99,11 @@ set_property (GObject      *object,
     case PROP_NAME:
       pastry_theme_set_name (self, g_value_get_string (value));
       break;
-    case PROP_ACCENT:
-      pastry_theme_set_accent (self, g_value_get_string (value));
+    case PROP_VISUAL_THEME:
+      pastry_theme_set_visual_theme (self, g_value_get_object (value));
+      break;
+    case PROP_SOUND_THEME:
+      pastry_theme_set_sound_theme (self, g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -117,10 +125,18 @@ pastry_theme_class_init (PastryThemeClass *klass)
           NULL, NULL, NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
-  props[PROP_ACCENT] =
-      g_param_spec_string (
-          "accent",
-          NULL, NULL, NULL,
+  props[PROP_VISUAL_THEME] =
+      g_param_spec_object (
+          "visual-theme",
+          NULL, NULL,
+          PASTRY_TYPE_VISUAL_THEME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
+  props[PROP_SOUND_THEME] =
+      g_param_spec_object (
+          "sound-theme",
+          NULL, NULL,
+          PASTRY_TYPE_SOUND_THEME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
   g_object_class_install_properties (object_class, LAST_PROP, props);
@@ -154,43 +170,47 @@ pastry_theme_get_name (PastryTheme *self)
 }
 
 void
-pastry_theme_set_accent (PastryTheme *self,
-                         const char  *accent)
+pastry_theme_set_visual_theme (PastryTheme       *self,
+                               PastryVisualTheme *visual_theme)
 {
   g_return_if_fail (PASTRY_IS_THEME (self));
+  g_return_if_fail (visual_theme == NULL || PASTRY_IS_VISUAL_THEME (visual_theme));
 
-  if (accent == self->accent)
+  if (visual_theme == self->visual_theme)
     return;
-  g_clear_pointer (&self->accent, g_free);
-  if (accent != NULL)
-    {
-      if (gdk_rgba_parse (&self->accent_rgba, accent))
-        self->accent = g_strdup (accent);
-      else
-        {
-          g_critical ("\"%s\" is an invalid RGBA spec", accent);
-          self->accent_rgba = (GdkRGBA) { 0 };
-        }
-    }
-  else
-    self->accent_rgba = (GdkRGBA) { 0 };
+  g_clear_object (&self->visual_theme);
+  if (visual_theme != NULL)
+    self->visual_theme = g_object_ref (visual_theme);
 
-  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACCENT]);
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_VISUAL_THEME]);
 }
 
-const char *
-pastry_theme_get_accent (PastryTheme *self)
+PastryVisualTheme *
+pastry_theme_get_visual_theme (PastryTheme *self)
 {
   g_return_val_if_fail (PASTRY_IS_THEME (self), NULL);
-  return self->accent;
+  return self->visual_theme;
 }
 
 void
-pastry_theme_copy_accent_rgba (PastryTheme *self,
-                               GdkRGBA     *rgba)
+pastry_theme_set_sound_theme (PastryTheme      *self,
+                              PastrySoundTheme *sound_theme)
 {
   g_return_if_fail (PASTRY_IS_THEME (self));
-  g_return_if_fail (rgba != NULL);
+  g_return_if_fail (sound_theme == NULL || PASTRY_IS_SOUND_THEME (sound_theme));
 
-  *rgba = self->accent_rgba;
+  if (sound_theme == self->sound_theme)
+    return;
+  g_clear_object (&self->sound_theme);
+  if (sound_theme != NULL)
+    self->sound_theme = g_object_ref (sound_theme);
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SOUND_THEME]);
+}
+
+PastrySoundTheme *
+pastry_theme_get_sound_theme (PastryTheme *self)
+{
+  g_return_val_if_fail (PASTRY_IS_THEME (self), NULL);
+  return self->sound_theme;
 }

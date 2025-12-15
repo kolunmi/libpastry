@@ -1,4 +1,4 @@
-/* pastry-theme.h
+/* pastry-sound-theme.h
  *
  * Copyright 2025 Eva M
  *
@@ -26,39 +26,20 @@
 
 #include "libpastry-version-macros.h"
 
-#include "pastry-sound-theme.h"
-#include "pastry-visual-theme.h"
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define PASTRY_TYPE_THEME (pastry_theme_get_type ())
-G_DECLARE_FINAL_TYPE (PastryTheme, pastry_theme, PASTRY, THEME, GObject)
+#define PASTRY_TYPE_SOUND_THEME (pastry_sound_theme_get_type ())
+G_DECLARE_FINAL_TYPE (PastrySoundTheme, pastry_sound_theme, PASTRY, SOUND_THEME, GObject)
 
 LIBPASTRY_AVAILABLE_IN_ALL
 void
-pastry_theme_set_name (PastryTheme *self,
-                       const char  *name);
+pastry_sound_theme_set_name (PastrySoundTheme *self,
+                             const char       *name);
 
 LIBPASTRY_AVAILABLE_IN_ALL
 const char *
-pastry_theme_get_name (PastryTheme *self);
-
-LIBPASTRY_AVAILABLE_IN_ALL
-void
-pastry_theme_set_visual_theme (PastryTheme       *self,
-                               PastryVisualTheme *visual_theme);
-
-LIBPASTRY_AVAILABLE_IN_ALL
-PastryVisualTheme *
-pastry_theme_get_visual_theme (PastryTheme *self);
-
-LIBPASTRY_AVAILABLE_IN_ALL
-void
-pastry_theme_set_sound_theme (PastryTheme      *self,
-                              PastrySoundTheme *sound_theme);
-
-LIBPASTRY_AVAILABLE_IN_ALL
-PastrySoundTheme *
-pastry_theme_get_sound_theme (PastryTheme *self);
+pastry_sound_theme_get_name (PastrySoundTheme *self);
 
 G_END_DECLS

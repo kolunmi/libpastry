@@ -30,8 +30,10 @@ G_BEGIN_DECLS
 #include "pastry-grid-spinner.h"
 #include "pastry-property-trail.h"
 #include "pastry-settings.h"
+#include "pastry-sound-theme.h"
 #include "pastry-spinner.h"
 #include "pastry-theme.h"
+#include "pastry-visual-theme.h"
 #undef LIBPASTRY_INSIDE
 
 LIBPASTRY_AVAILABLE_IN_ALL

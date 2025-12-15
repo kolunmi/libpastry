@@ -65,8 +65,8 @@ struct _PastrySettings
 };
 G_DEFINE_FINAL_TYPE (PastrySettings, pastry_settings, G_TYPE_OBJECT)
 
-static void
-init_default (PastrySettings *self);
+static PastrySettings *
+init_default (void);
 
 static void
 init_css (PastrySettings *self);
@@ -205,21 +205,7 @@ pastry_settings_get_default (void)
 
   /* GTK APIs are not threadsafe */
   if (settings == NULL)
-    {
-      g_autoptr (PastryTheme) theme = NULL;
-
-      theme = g_object_new (
-          PASTRY_TYPE_THEME,
-          "name", "default",
-          "accent", "#dfdfe7",
-          NULL);
-
-      settings = g_object_new (
-          PASTRY_TYPE_SETTINGS,
-          "theme", theme,
-          NULL);
-      init_default (settings);
-    }
+    settings = init_default ();
 
   return settings;
 }
@@ -233,16 +219,16 @@ pastry_settings_get_default (void)
 void
 pastry_copy_accent_rgba (GdkRGBA *rgba)
 {
-  PastrySettings *settings = NULL;
-  PastryTheme    *theme    = NULL;
+  PastrySettings    *settings = NULL;
+  PastryVisualTheme *theme    = NULL;
 
   g_return_if_fail (rgba != NULL);
 
   settings = pastry_settings_get_default ();
-  theme    = pastry_settings_get_theme (settings);
+  theme    = pastry_get_object (settings, "theme", "visual-theme", NULL);
 
   if (theme != NULL)
-    pastry_theme_copy_accent_rgba (theme, rgba);
+    pastry_visual_theme_copy_accent_rgba (theme, rgba);
   else
     *rgba = (GdkRGBA) { 0 };
 }
@@ -285,13 +271,40 @@ pastry_settings_get_theme (PastrySettings *self)
   return self->theme;
 }
 
-static void
-init_default (PastrySettings *self)
+static PastrySettings *
+init_default (void)
 {
-  self->is_default = TRUE;
+  g_autoptr (PastrySoundTheme) sound_theme   = NULL;
+  g_autoptr (PastryVisualTheme) visual_theme = NULL;
+  g_autoptr (PastryTheme) theme              = NULL;
+  g_autoptr (PastrySettings) settings        = NULL;
 
-  init_css (self);
-  init_portal (self);
+  visual_theme = g_object_new (
+      PASTRY_TYPE_VISUAL_THEME,
+      "name", "Default Visual Theme",
+      "accent", "#dfdfe7",
+      NULL);
+  sound_theme = g_object_new (
+      PASTRY_TYPE_SOUND_THEME,
+      "name", "Default Sound Theme",
+      NULL);
+  theme = g_object_new (
+      PASTRY_TYPE_THEME,
+      "name", "Default Theme",
+      "visual-theme", visual_theme,
+      "sound-theme", sound_theme,
+      NULL);
+
+  settings = g_object_new (
+      PASTRY_TYPE_SETTINGS,
+      "theme", theme,
+      NULL);
+  settings->is_default = TRUE;
+
+  init_css (settings);
+  init_portal (settings);
+
+  return g_steal_pointer (&settings);
 }
 
 static void

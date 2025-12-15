@@ -96,16 +96,19 @@ set_theme_cb (GtkDropDown *drop_down,
 
   if (accent != NULL)
     {
-      g_autoptr (PastryTheme) theme = NULL;
-      PastrySettings *settings      = NULL;
+      g_autoptr (PastryVisualTheme) visual_theme = NULL;
+      PastrySettings *settings                   = NULL;
+      PastryTheme    *theme                      = NULL;
 
-      theme = g_object_new (
-          PASTRY_TYPE_THEME,
+      visual_theme = g_object_new (
+          PASTRY_TYPE_VISUAL_THEME,
           "name", name,
           "accent", accent,
           NULL);
 
       settings = pastry_settings_get_default ();
-      pastry_settings_set_theme (settings, theme);
+      theme    = pastry_settings_get_theme (settings);
+      if (theme != NULL)
+        pastry_theme_set_visual_theme (theme, visual_theme);
     }
 }
