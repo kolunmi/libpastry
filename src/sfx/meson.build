@@ -1,3 +1,12 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e540cc3dff1bf98c11ab52901027732baeb32ad4a7e19a9dd957745bac8be866
-size 288
+libpastry_sfx_resources = gnome.compile_resources(
+  'pastry-sfx-resources',
+  'pastry-sfx.gresources.xml',
+
+  source_dir: [
+    # List in order of preference
+    meson.current_build_dir(),
+    meson.current_source_dir(),
+  ],
+  dependencies: pastry_theme_deps,
+  c_name: 'pastry_sfx',
+)
