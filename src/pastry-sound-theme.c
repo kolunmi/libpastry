@@ -175,7 +175,7 @@ pastry_sound_theme_set_name (PastrySoundTheme *self,
  *
  * Gets the name string of @self.
  *
- * Returns: (nullable) (transfer none): the name object of @self
+ * Returns: (nullable) (transfer none): the name of @self
  */
 const char *
 pastry_sound_theme_get_name (PastrySoundTheme *self)
