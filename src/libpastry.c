@@ -38,8 +38,10 @@ pastry_init (void)
   g_type_ensure (PASTRY_TYPE_GRID_SPINNER);
   g_type_ensure (PASTRY_TYPE_PROPERTY_TRAIL);
   g_type_ensure (PASTRY_TYPE_SETTINGS);
+  g_type_ensure (PASTRY_TYPE_SOUND_THEME);
   g_type_ensure (PASTRY_TYPE_SPINNER);
   g_type_ensure (PASTRY_TYPE_THEME);
+  g_type_ensure (PASTRY_TYPE_VISUAL_THEME);
 
   (void) pastry_settings_get_default ();
 }
