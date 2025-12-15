@@ -287,6 +287,7 @@ init_default (void)
   sound_theme = g_object_new (
       PASTRY_TYPE_SOUND_THEME,
       "name", "Default Sound Theme",
+      "controller-connected-uri", "resource:///org/croissant/Pastry/sfx/controllerconnect.wav",
       NULL);
   theme = g_object_new (
       PASTRY_TYPE_THEME,

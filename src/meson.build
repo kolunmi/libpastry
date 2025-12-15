@@ -48,6 +48,9 @@ libpastry_deps = [
 subdir('stylesheet')
 libpastry_sources += [libpastry_stylesheet_resources]
 
+subdir('sfx')
+libpastry_sources += [libpastry_sfx_resources]
+
 libpastry_lib = shared_library(
   'libpastry-' + api_version,
   libpastry_sources,
@@ -75,8 +78,6 @@ pkg.generate(
      requires: 'gtk4',
   install_dir: get_option('libdir') / 'pkgconfig'
 )
-
-gnome = import('gnome')
 
 # gir_args = [
 #   '--quiet',
