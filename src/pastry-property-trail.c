@@ -18,6 +18,13 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/**
+ * PastryPropertyTrail:
+ *
+ * References properties of properties on GObject instances with an arbitrary
+ * depth.
+ */
+
 #define G_LOG_DOMAIN "PASTRY::PROPERTY-TRAIL"
 
 #include "config.h"
@@ -133,6 +140,11 @@ pastry_property_trail_class_init (PastryPropertyTrailClass *klass)
   object_class->get_property = get_property;
   object_class->dispose      = dispose;
 
+  /**
+   * PastryPropertyTrail:object:
+   *
+   * The root object to track from.
+   */
   props[PROP_OBJECT] =
       g_param_spec_object (
           "object",
@@ -140,6 +152,12 @@ pastry_property_trail_class_init (PastryPropertyTrailClass *klass)
           G_TYPE_OBJECT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
+  /**
+   * PastryPropertyTrail:trail:
+   *
+   * A `GListModel` of `GtkStringObject`s, where each string represents the
+   * property at the depth of the item's index.
+   */
   props[PROP_TRAIL] =
       g_param_spec_object (
           "trail",
@@ -149,6 +167,14 @@ pastry_property_trail_class_init (PastryPropertyTrailClass *klass)
 
   g_object_class_install_properties (object_class, LAST_PROP, props);
 
+  /**
+   * PastryPropertyTrail::changed:
+   * @trail: the object that received the signal
+   * @object: the object with the greatest depth, or %NULL if it can't be resolved
+   *
+   * Emitted when any of the objects referenced by the property names along
+   * [property@Pastry.PropertyTrail:trail] emit the "notify::name" signal
+   */
   signals[SIGNAL_CHANGED] =
       g_signal_new (
           "changed",
@@ -171,6 +197,16 @@ pastry_property_trail_init (PastryPropertyTrail *self)
   self->objects = g_ptr_array_new_with_free_func (g_object_unref);
 }
 
+/**
+ * pastry_property_trail_new:
+ * @object: The root object to track
+ * @property: The first property
+ * @...: optionally more properties, followed by %NULL
+ *
+ * Creates a new `PastryPropertyTrail` object.
+ *
+ * Returns: The newly created `PastryPropertyTrail` object.
+ */
 PastryPropertyTrail *
 pastry_property_trail_new (gpointer    object,
                            const char *property,
@@ -205,6 +241,13 @@ pastry_property_trail_new (gpointer    object,
       NULL);
 }
 
+/**
+ * pastry_property_trail_set_object:
+ * @self: a `PastryPropertyTrail`
+ * @object: a `GObject` instance to track from
+ *
+ * Sets the root object to track from.
+ */
 void
 pastry_property_trail_set_object (PastryPropertyTrail *self,
                                   GObject             *object)
@@ -224,6 +267,14 @@ pastry_property_trail_set_object (PastryPropertyTrail *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_OBJECT]);
 }
 
+/**
+ * pastry_property_trail_get_object:
+ * @self: a `PastryPropertyTrail`
+ *
+ * Gets the root object being tracked by @self.
+ *
+ * Returns: (nullable) (transfer none): the root object being tracked by @self
+ */
 GObject *
 pastry_property_trail_get_object (PastryPropertyTrail *self)
 {
@@ -231,6 +282,13 @@ pastry_property_trail_get_object (PastryPropertyTrail *self)
   return self->object;
 }
 
+/**
+ * pastry_property_trail_set_trail:
+ * @self: a `PastryPropertyTrail`
+ * @trail: a `GListModel` of `GtkStringObject`s
+ *
+ * Sets the trail to track on the root object.
+ */
 void
 pastry_property_trail_set_trail (PastryPropertyTrail *self,
                                  GListModel          *trail)
@@ -250,6 +308,14 @@ pastry_property_trail_set_trail (PastryPropertyTrail *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_TRAIL]);
 }
 
+/**
+ * pastry_property_trail_get_trail:
+ * @self: a `PastryPropertyTrail`
+ *
+ * Gets the trail model for @self.
+ *
+ * Returns: (nullable) (transfer none): the trail model for @self
+ */
 GListModel *
 pastry_property_trail_get_trail (PastryPropertyTrail *self)
 {
