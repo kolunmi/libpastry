@@ -92,3 +92,7 @@ libpastry_gir = gnome.generate_gir(libpastry_lib,
              includes: ['Gtk-4.0'],
               install: true,
 )
+libpastry_gir_dep = declare_dependency(
+  dependencies: [libpastry_dep],
+       sources: [libpastry_gir],
+)
