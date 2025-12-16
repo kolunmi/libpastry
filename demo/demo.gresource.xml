@@ -2,12 +2,5 @@
 <gresources>
   <gresource prefix="/io/github/kolunmi/PastryDemo">
     <file>window.ui</file>
-    <file>cr_home.png</file>
-    <file>cr_library.png</file>
-    <file>cr_media.png</file>
-    <file>cr_news.png</file>
-    <file>cr_notes.png</file>
-    <file>cr_profile.png</file>
-    <file>cr_settings.png</file>
   </gresource>
 </gresources>
