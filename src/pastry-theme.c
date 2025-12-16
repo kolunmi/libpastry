@@ -18,6 +18,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/**
+ * PastryTheme:
+ *
+ * Contains information for presenting a libpastry UI.
+ */
+
 #define G_LOG_DOMAIN "PASTRY::THEME"
 
 #include "config.h"
@@ -119,12 +125,22 @@ pastry_theme_class_init (PastryThemeClass *klass)
   object_class->get_property = get_property;
   object_class->dispose      = dispose;
 
+  /**
+   * PastryTheme:name:
+   *
+   * The name of this theme.
+   */
   props[PROP_NAME] =
       g_param_spec_string (
           "name",
           NULL, NULL, NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
+  /**
+   * PastryTheme:visual-theme:
+   *
+   * The active visual theme.
+   */
   props[PROP_VISUAL_THEME] =
       g_param_spec_object (
           "visual-theme",
@@ -132,6 +148,11 @@ pastry_theme_class_init (PastryThemeClass *klass)
           PASTRY_TYPE_VISUAL_THEME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
+  /**
+   * PastryTheme:sound-theme:
+   *
+   * The active sound theme.
+   */
   props[PROP_SOUND_THEME] =
       g_param_spec_object (
           "sound-theme",
@@ -147,6 +168,13 @@ pastry_theme_init (PastryTheme *self)
 {
 }
 
+/**
+ * pastry_theme_set_name:
+ * @self: a `PastryTheme`
+ * @name: a string representing the new name of the theme
+ *
+ * Sets the theme's name.
+ */
 void
 pastry_theme_set_name (PastryTheme *self,
                        const char  *name)
@@ -162,6 +190,14 @@ pastry_theme_set_name (PastryTheme *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_NAME]);
 }
 
+/**
+ * pastry_theme_get_name:
+ * @self: a `PastryTheme`
+ *
+ * Gets the name string of @self.
+ *
+ * Returns: (nullable) (transfer none): the name of @self
+ */
 const char *
 pastry_theme_get_name (PastryTheme *self)
 {
@@ -169,6 +205,13 @@ pastry_theme_get_name (PastryTheme *self)
   return self->name;
 }
 
+/**
+ * pastry_theme_set_visual_theme:
+ * @self: a `PastryTheme`
+ * @visual_theme: a `PastryVisualTheme`
+ *
+ * Sets the visual theme.
+ */
 void
 pastry_theme_set_visual_theme (PastryTheme       *self,
                                PastryVisualTheme *visual_theme)
@@ -185,6 +228,14 @@ pastry_theme_set_visual_theme (PastryTheme       *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_VISUAL_THEME]);
 }
 
+/**
+ * pastry_theme_get_visual_theme:
+ * @self: a `PastryTheme`
+ *
+ * Gets the visual theme object of @self.
+ *
+ * Returns: (nullable) (transfer none): the visual theme object of @self
+ */
 PastryVisualTheme *
 pastry_theme_get_visual_theme (PastryTheme *self)
 {
@@ -192,6 +243,13 @@ pastry_theme_get_visual_theme (PastryTheme *self)
   return self->visual_theme;
 }
 
+/**
+ * pastry_theme_set_sound_theme:
+ * @self: a `PastryTheme`
+ * @sound_theme: a `PastrySoundTheme`
+ *
+ * Sets the sound theme.
+ */
 void
 pastry_theme_set_sound_theme (PastryTheme      *self,
                               PastrySoundTheme *sound_theme)
@@ -208,6 +266,14 @@ pastry_theme_set_sound_theme (PastryTheme      *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SOUND_THEME]);
 }
 
+/**
+ * pastry_theme_get_sound_theme:
+ * @self: a `PastryTheme`
+ *
+ * Gets the sound theme object of @self.
+ *
+ * Returns: (nullable) (transfer none): the sound theme object of @self
+ */
 PastrySoundTheme *
 pastry_theme_get_sound_theme (PastryTheme *self)
 {

@@ -79,19 +79,16 @@ pkg.generate(
   install_dir: get_option('libdir') / 'pkgconfig'
 )
 
-# gir_args = [
-#   '--quiet',
-#   '--doc-format=gi-docgen',
-# ]
-# libpastry_gir = gnome.generate_gir(libpastry_lib,
-#               sources: [libpastry_sources, libpastry_headers],
-#                header: 'libpastry.h',
-#       export_packages: 'Pastry-' + api_version,
-#             nsversion: api_version,
-#             namespace: 'pastry',
-#         symbol_prefix: 'pastry',
-#     identifier_prefix: 'pastry',
-#            extra_args: gir_args,
-#              includes: ['Gtk-4.0'],
-#               install: true,
-# )
+gir_args = []
+libpastry_gir = gnome.generate_gir(libpastry_lib,
+              sources: [libpastry_sources, libpastry_headers],
+               header: 'libpastry.h',
+      export_packages: 'Pastry-' + api_version,
+            nsversion: api_version,
+            namespace: 'Pastry',
+        symbol_prefix: 'pastry',
+    identifier_prefix: 'Pastry',
+           extra_args: gir_args,
+             includes: ['Gtk-4.0'],
+              install: true,
+)

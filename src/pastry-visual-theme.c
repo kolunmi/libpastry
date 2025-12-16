@@ -18,6 +18,13 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/**
+ * PastryVisualTheme:
+ *
+ * Defines a set of visual parameters used to customize the look of a libpastry
+ * UI.
+ */
+
 #define G_LOG_DOMAIN "PASTRY::VISUAL-THEME"
 
 #include "config.h"
@@ -111,12 +118,22 @@ pastry_visual_theme_class_init (PastryVisualThemeClass *klass)
   object_class->get_property = get_property;
   object_class->dispose      = dispose;
 
+  /**
+   * PastryVisualTheme:name:
+   *
+   * The name of this theme.
+   */
   props[PROP_NAME] =
       g_param_spec_string (
           "name",
           NULL, NULL, NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
+  /**
+   * PastryVisualTheme:accent:
+   *
+   * The accent color string representation for this theme.
+   */
   props[PROP_ACCENT] =
       g_param_spec_string (
           "accent",
@@ -131,6 +148,13 @@ pastry_visual_theme_init (PastryVisualTheme *self)
 {
 }
 
+/**
+ * pastry_visual_theme_set_name:
+ * @self: a `PastryVisualTheme`
+ * @name: a string representing the new name of the theme
+ *
+ * Sets the theme's name.
+ */
 void
 pastry_visual_theme_set_name (PastryVisualTheme *self,
                               const char        *name)
@@ -146,6 +170,14 @@ pastry_visual_theme_set_name (PastryVisualTheme *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_NAME]);
 }
 
+/**
+ * pastry_visual_theme_get_name:
+ * @self: a `PastryVisualTheme`
+ *
+ * Gets the name string of @self.
+ *
+ * Returns: (nullable) (transfer none): the name of @self
+ */
 const char *
 pastry_visual_theme_get_name (PastryVisualTheme *self)
 {
@@ -153,6 +185,13 @@ pastry_visual_theme_get_name (PastryVisualTheme *self)
   return self->name;
 }
 
+/**
+ * pastry_visual_theme_set_accent:
+ * @self: a `PastryVisualTheme`
+ * @accent: a string representing an RGBA value
+ *
+ * Sets the theme's accent.
+ */
 void
 pastry_visual_theme_set_accent (PastryVisualTheme *self,
                                 const char        *accent)
@@ -178,6 +217,15 @@ pastry_visual_theme_set_accent (PastryVisualTheme *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACCENT]);
 }
 
+/**
+ * pastry_visual_theme_get_accent:
+ * @self: a `PastryVisualTheme`
+ *
+ * Gets the accent string of @self.
+ *
+ * Returns: (nullable) (transfer none): the accent color string representation
+ *   of @self
+ */
 const char *
 pastry_visual_theme_get_accent (PastryVisualTheme *self)
 {
@@ -185,6 +233,13 @@ pastry_visual_theme_get_accent (PastryVisualTheme *self)
   return self->accent;
 }
 
+/**
+ * pastry_visual_theme_copy_accent_rgba:
+ * @self: a `PastryVisualTheme`
+ * @rgba: a `GdkRGBA` to write into
+ *
+ * Copies the stored accent color value of the `PastryTheme` into @rgba.
+ */
 void
 pastry_visual_theme_copy_accent_rgba (PastryVisualTheme *self,
                                       GdkRGBA           *rgba)
