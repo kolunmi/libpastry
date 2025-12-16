@@ -57,11 +57,6 @@ libpastry_lib = shared_library(
   dependencies: libpastry_deps,
        install: true,
 )
-libpastry_dep = declare_dependency(
-  link_with: libpastry_lib,
-  dependencies: libpastry_deps,
-  include_directories : include_directories('..', '.'),
-)
 
 install_headers(
   libpastry_headers + files('libpastry-version-macros.h'),
@@ -93,6 +88,11 @@ libpastry_gir = gnome.generate_gir(libpastry_lib,
               install: true,
 )
 libpastry_gir_dep = declare_dependency(
-  dependencies: [libpastry_dep],
-       sources: [libpastry_gir],
+  sources: [libpastry_gir],
+)
+
+libpastry_dep = declare_dependency(
+  link_with: libpastry_lib,
+  dependencies: [libpastry_deps, libpastry_gir_dep],
+  include_directories : include_directories('..', '.'),
 )
