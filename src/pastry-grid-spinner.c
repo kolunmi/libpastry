@@ -18,6 +18,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/**
+ * PastryGridSpinner:
+ *
+ * Draws a loading spinner with a grid of 9 squares.
+ */
+
 #define G_LOG_DOMAIN "PASTRY::GRID-SPINNER"
 
 #include "config.h"
@@ -194,6 +200,11 @@ pastry_grid_spinner_class_init (PastryGridSpinnerClass *klass)
   object_class->get_property = get_property;
   object_class->dispose      = dispose;
 
+  /**
+   * PastryGridSpinner:speed:
+   *
+   * The animation speed, 1.0 being normal speed.
+   */
   props[PROP_SPEED] =
       g_param_spec_double (
           "speed",
@@ -241,6 +252,13 @@ pastry_grid_spinner_init (PastryGridSpinner *self)
       G_CALLBACK (accent_changed_cb), self);
 }
 
+/**
+ * pastry_grid_spinner_set_speed:
+ * @self: a `PastryGridSpinner`
+ * @speed: the animation speed
+ *
+ * Sets the speed of the spinner's animation
+ */
 void
 pastry_grid_spinner_set_speed (PastryGridSpinner *self,
                                double             speed)
@@ -254,6 +272,14 @@ pastry_grid_spinner_set_speed (PastryGridSpinner *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SPEED]);
 }
 
+/**
+ * pastry_grid_spinner_get_speed
+ * @self: a `PastryGridSpinner`
+ *
+ * Gets the animation speed of @self.
+ *
+ * Returns: the animation speed of @self
+ */
 double
 pastry_grid_spinner_get_speed (PastryGridSpinner *self)
 {

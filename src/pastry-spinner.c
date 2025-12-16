@@ -18,6 +18,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/**
+ * PastrySpinner:
+ *
+ * Draws a circular loading spinner.
+ */
+
 #define G_LOG_DOMAIN "PASTRY::SPINNER"
 
 #include "config.h"
@@ -192,6 +198,11 @@ pastry_spinner_class_init (PastrySpinnerClass *klass)
   object_class->get_property = get_property;
   object_class->dispose      = dispose;
 
+  /**
+   * PastrySpinner:speed:
+   *
+   * The animation speed, 1.0 being normal speed.
+   */
   props[PROP_SPEED] =
       g_param_spec_double (
           "speed",
@@ -199,6 +210,11 @@ pastry_spinner_class_init (PastrySpinnerClass *klass)
           0.0, G_MAXDOUBLE, 1.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
+  /**
+   * PastrySpinner:n-dots:
+   *
+   * The number of dots to render in a circle.
+   */
   props[PROP_N_DOTS] =
       g_param_spec_int (
           "n-dots",
@@ -247,6 +263,13 @@ pastry_spinner_init (PastrySpinner *self)
       G_CALLBACK (accent_changed_cb), self);
 }
 
+/**
+ * pastry_spinner_set_speed:
+ * @self: a `PastrySpinner`
+ * @speed: the animation speed
+ *
+ * Sets the speed of the spinner's animation
+ */
 void
 pastry_spinner_set_speed (PastrySpinner *self,
                           double         speed)
@@ -260,6 +283,14 @@ pastry_spinner_set_speed (PastrySpinner *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SPEED]);
 }
 
+/**
+ * pastry_spinner_get_speed
+ * @self: a `PastrySpinner`
+ *
+ * Gets the animation speed of @self.
+ *
+ * Returns: the animation speed of @self
+ */
 double
 pastry_spinner_get_speed (PastrySpinner *self)
 {
@@ -267,6 +298,13 @@ pastry_spinner_get_speed (PastrySpinner *self)
   return self->speed;
 }
 
+/**
+ * pastry_spinner_set_n_dots:
+ * @self: a `PastrySpinner`
+ * @n_dots: the number of dots
+ *
+ * Sets the number of dots rendered by @self
+ */
 void
 pastry_spinner_set_n_dots (PastrySpinner *self,
                            int            n_dots)
@@ -281,6 +319,14 @@ pastry_spinner_set_n_dots (PastrySpinner *self,
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_N_DOTS]);
 }
 
+/**
+ * pastry_spinner_get_n_dots
+ * @self: a `PastrySpinner`
+ *
+ * Gets the number of dots rendered by @self
+ *
+ * Returns: the number of dots rendered by @self
+ */
 int
 pastry_spinner_get_n_dots (PastrySpinner *self)
 {
