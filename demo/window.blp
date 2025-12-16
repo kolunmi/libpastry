@@ -4,7 +4,7 @@ Box root {
   orientation: vertical;
 
   DropDown {
-    notify::selected-item => set_theme_cb();
+    notify::selected-item => $set_theme_cb();
     model: StringList {
       strings [
         "Default",
