@@ -136,9 +136,7 @@ $_default_button_c: lighten($bg_color,2%);
     color: $tc;
     outline-color: if($c != $_default_button_c, $alt_focus_border_color, $focus_border_color);
     border-color: if($c!=$_default_button_c, _border_color($c, true), $borders_color); //tint if not default button color
-    background-image: if($variant == 'light',
-                         linear-gradient(to top, lighten($c, 10%) 2px, $c),
-                         linear-gradient(to top, darken($c, 15%) 4px, $c));
+    background-image: image(if($variant == 'light', lighten($c, 10%), darken($c, 15%)));
     @include _shadows($_button_shadow);
   }
 
@@ -370,12 +368,9 @@ $_default_button_c: lighten($bg_color,2%);
 // $c:  base color
 // $ov: a background layer for background shorthand (hence no commas!)
 //
-  $gradient: linear-gradient(to top, darken($c, 2%), lighten($c, 1%));
 
-  @if $variant == 'dark' { $gradient: linear-gradient(to top, lighten($c, 4%), lighten($c, 6%)); }
-
-  @if $ov != none { background: $c $ov, $gradient; }
-  @else { background: $c $gradient; }
+  @if $ov != none { background: $c $ov; }
+  @else { background: $c; }
 
 }
 

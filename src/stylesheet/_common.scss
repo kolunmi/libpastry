@@ -12,7 +12,7 @@ $focus_transition: outline-width 200ms $ease-out-quad, outline-offset 200ms $eas
 $button_radius: 15px;
 $menu_radius: 5px;
 $menu_margin: $menu_radius; //margin around menuitems & sidebar items
-$window_radius: 10px;
+$window_radius: 16px;
 $popover_radius: 11px;
 
 /***************
@@ -230,7 +230,6 @@ window.aboutdialog image.large-icons {
   background-color: $osd_bg_color;
   background-clip: padding-box;
   -gtk-icon-shadow: 0 1px black;
-
 }
 
 
@@ -1570,15 +1569,15 @@ headerbar {
     windowcontrols {
       button,
       menubutton {
-        min-height: 26px;
-        min-width: 26px;
+        min-height: 32px;
+        min-width: 32px;
         margin: 0;
         padding: 0;
       }
 
       menubutton button {
-        min-height: 20px;
-        min-width: 20px;
+        min-height: 22px;
+        min-width: 22px;
         margin: 0;
         padding: 4px;
       }
@@ -4210,7 +4209,7 @@ window {
     box-shadow: 0 3px 9px 1px transparentize(black, 0.5),
                 0 0 0 1px $_wm_border; //doing borders with box-shadow
     margin: 0px;
-    border-radius: $window_radius $window_radius 0 0;
+    border-radius: $window_radius $window_radius $window_radius $window_radius;
     &:backdrop {
       // the transparent shadow here is to enforce that the shadow extents don't
       // change when we go to backdrop, to prevent jumping windows.

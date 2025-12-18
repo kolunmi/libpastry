@@ -31,7 +31,8 @@ set_theme_cb (GtkDropDown *drop_down,
 int
 main (int argc, char **argv)
 {
-  g_autoptr (GtkApplication) app = NULL;
+  g_autoptr (GtkApplication) app      = NULL;
+  g_autoptr (GtkCssProvider) provider = NULL;
 
   pastry_init ();
 
@@ -39,6 +40,14 @@ main (int argc, char **argv)
       "em.libpastry.Demo",
       G_APPLICATION_DEFAULT_FLAGS);
   g_signal_connect (app, "activate", G_CALLBACK (on_activate), NULL);
+
+  provider = gtk_css_provider_new ();
+  gtk_css_provider_load_from_resource (provider, "/io/github/kolunmi/PastryDemo/style.css");
+  gtk_style_context_add_provider_for_display (
+      gdk_display_get_default (),
+      GTK_STYLE_PROVIDER (provider),
+      GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
   return g_application_run (G_APPLICATION (app), argc, argv);
 }
 
