@@ -493,5 +493,5 @@ apply_css (PastrySettings *self)
   gtk_style_context_add_provider_for_display (
       self->default_state.display,
       GTK_STYLE_PROVIDER (self->default_state.applied),
-      GTK_STYLE_PROVIDER_PRIORITY_USER);
+      GTK_STYLE_PROVIDER_PRIORITY_SETTINGS);
 }
