@@ -1,7 +1,12 @@
 using Gtk 4.0;
 
 Box root {
+  margin-start: 10;
+  margin-end: 10;
+  margin-top: 10;
+  margin-bottom: 10;
   orientation: vertical;
+  spacing: 20;
 
   DropDown {
     notify::selected-item => $set_theme_cb();
@@ -19,43 +24,51 @@ Box root {
   }
 
   Box {
-    orientation: horizontal;
+    orientation: vertical;
 
-    FlowBox {
-      valign: start;
-      selection-mode: none;
+    Label {
+      xalign: 0.0;
+      label: "Please choose the option which is not like the others";
+    }
+
+    Grid {
       column-spacing: 7;
       row-spacing: 7;
 
-      FlowBoxChild {
-        focusable: false;
-        Label {
-          label: "Label";
+      Button {
+        label: "Option A";
+
+        layout {
+          column: 0;
+          row: 0;
         }
       }
 
-      FlowBoxChild {
-        focusable: false;
-        Button {
-          label: "Button";
+      Button {
+        label: "Option B";
+
+        layout {
+          column: 1;
+          row: 0;
         }
       }
 
-      FlowBoxChild {
-        focusable: false;
-        Entry {
-          placeholder-text: "Text Entry";
+      Button {
+        label: "Option C";
+
+        layout {
+          column: 0;
+          row: 1;
         }
       }
 
-      FlowBoxChild {
-        focusable: false;
-        $PastrySpinner {}
-      }
+      Button {
+        label: "Option D";
 
-      FlowBoxChild {
-        focusable: false;
-        $PastryGridSpinner {}
+        layout {
+          column: 1;
+          row: 1;
+        }
       }
     }
   }
