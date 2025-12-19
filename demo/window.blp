@@ -1,17 +1,18 @@
 using Gtk 4.0;
 
-Box root {
-  styles [
-    "main-bg",
-  ]
+$PastryGlassRoot root {
+  child: Box {
+    styles [
+      "main-bg",
+    ]
 
-  orientation: vertical;
-  spacing: 20;
+    orientation: vertical;
+    spacing: 20;
 
-  DropDown {
-    notify::selected-item => $set_theme_cb();
-    model: StringList {
-      strings [
+    DropDown {
+      notify::selected-item => $set_theme_cb();
+      model: StringList {
+        strings [
         "Default",
         "Purple",
         "Green",
@@ -19,62 +20,70 @@ Box root {
         "Red",
         "Pink",
         "Orange",
-      ]
-    };
-  }
-
-  Box {
-    styles [
-      "osd",
-      "frame",
-    ]
-
-    orientation: vertical;
-
-    Label {
-      xalign: 0.0;
-      label: "Please choose the option which is not like the others";
+        ]
+      };
     }
 
-    Grid {
-      column-spacing: 7;
-      row-spacing: 7;
+    $PastryGlassFrame {
+      vexpand: true;
+      margin-start: 30;
+      margin-end: 30;
+      margin-top: 30;
+      margin-bottom: 30;
 
-      Button {
-        label: "Option A";
+      child: Box {
+        orientation: vertical;
+        margin-start: 10;
+        margin-end: 10;
+        margin-top: 10;
+        margin-bottom: 10;
 
-        layout {
-          column: 0;
-          row: 0;
+        Label {
+          xalign: 0.0;
+          label: "Please choose the option which is not like the others";
         }
-      }
 
-      Button {
-        label: "Option B";
+        Grid {
+          column-spacing: 7;
+          row-spacing: 7;
 
-        layout {
-          column: 1;
-          row: 0;
+          Button {
+            label: "Option A";
+
+            layout {
+              column: 0;
+              row: 0;
+            }
+          }
+
+          Button {
+            label: "Option B";
+
+            layout {
+              column: 1;
+              row: 0;
+            }
+          }
+
+          Button {
+            label: "Option C";
+
+            layout {
+              column: 0;
+              row: 1;
+            }
+          }
+
+          Button {
+            label: "Option D";
+
+            layout {
+              column: 1;
+              row: 1;
+            }
+          }
         }
-      }
-
-      Button {
-        label: "Option C";
-
-        layout {
-          column: 0;
-          row: 1;
-        }
-      }
-
-      Button {
-        label: "Option D";
-
-        layout {
-          column: 1;
-          row: 1;
-        }
-      }
+      };
     }
-  }
+  };
 }

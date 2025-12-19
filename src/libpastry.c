@@ -35,6 +35,9 @@ pastry_init (void)
   gtk_init ();
 
   g_type_ensure (PASTRY_TYPE_ANIMATION);
+  g_type_ensure (PASTRY_TYPE_GLASSED);
+  g_type_ensure (PASTRY_TYPE_GLASS_FRAME);
+  g_type_ensure (PASTRY_TYPE_GLASS_ROOT);
   g_type_ensure (PASTRY_TYPE_GRID_SPINNER);
   g_type_ensure (PASTRY_TYPE_PROPERTY_TRAIL);
   g_type_ensure (PASTRY_TYPE_SETTINGS);

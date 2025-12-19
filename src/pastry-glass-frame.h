@@ -1,4 +1,4 @@
-/* libpastry.h
+/* pastry-glass-frame.h
  *
  * Copyright 2025 Eva M
  *
@@ -20,27 +20,26 @@
 
 #pragma once
 
+#ifndef LIBPASTRY_INSIDE
+#error "Only <libpastry.h> can be included directly."
+#endif
+
+#include "libpastry-version-macros.h"
+
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define LIBPASTRY_INSIDE
-#include "libpastry-version-macros.h"
-#include "pastry-animation.h"
-#include "pastry-glass-frame.h"
-#include "pastry-glass-root.h"
-#include "pastry-glassed.h"
-#include "pastry-grid-spinner.h"
-#include "pastry-property-trail.h"
-#include "pastry-settings.h"
-#include "pastry-sound-theme.h"
-#include "pastry-spinner.h"
-#include "pastry-theme.h"
-#include "pastry-visual-theme.h"
-#undef LIBPASTRY_INSIDE
+#define PASTRY_TYPE_GLASS_FRAME (pastry_glass_frame_get_type ())
+G_DECLARE_FINAL_TYPE (PastryGlassFrame, pastry_glass_frame, PASTRY, GLASS_FRAME, GtkWidget)
 
 LIBPASTRY_AVAILABLE_IN_ALL
 void
-pastry_init (void);
+pastry_glass_frame_set_child (PastryGlassFrame *self,
+                              GtkWidget        *child);
+
+LIBPASTRY_AVAILABLE_IN_ALL
+GtkWidget *
+pastry_glass_frame_get_child (PastryGlassFrame *self);
 
 G_END_DECLS

@@ -1,4 +1,4 @@
-/* libpastry.h
+/* pastry-glass-root.h
  *
  * Copyright 2025 Eva M
  *
@@ -20,27 +20,35 @@
 
 #pragma once
 
+#ifndef LIBPASTRY_INSIDE
+#error "Only <libpastry.h> can be included directly."
+#endif
+
+#include "libpastry-version-macros.h"
+
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define LIBPASTRY_INSIDE
-#include "libpastry-version-macros.h"
-#include "pastry-animation.h"
-#include "pastry-glass-frame.h"
-#include "pastry-glass-root.h"
-#include "pastry-glassed.h"
-#include "pastry-grid-spinner.h"
-#include "pastry-property-trail.h"
-#include "pastry-settings.h"
-#include "pastry-sound-theme.h"
-#include "pastry-spinner.h"
-#include "pastry-theme.h"
-#include "pastry-visual-theme.h"
-#undef LIBPASTRY_INSIDE
+#define PASTRY_TYPE_GLASS_ROOT (pastry_glass_root_get_type ())
+G_DECLARE_FINAL_TYPE (PastryGlassRoot, pastry_glass_root, PASTRY, GLASS_ROOT, GtkWidget)
 
 LIBPASTRY_AVAILABLE_IN_ALL
 void
-pastry_init (void);
+pastry_glass_root_set_child (PastryGlassRoot *self,
+                             GtkWidget       *child);
+
+LIBPASTRY_AVAILABLE_IN_ALL
+GtkWidget *
+pastry_glass_root_get_child (PastryGlassRoot *self);
+
+LIBPASTRY_AVAILABLE_IN_ALL
+void
+pastry_glass_root_set_capacity (PastryGlassRoot *self,
+                                int              capacity);
+
+LIBPASTRY_AVAILABLE_IN_ALL
+int
+pastry_glass_root_get_capacity (PastryGlassRoot *self);
 
 G_END_DECLS

@@ -1,4 +1,4 @@
-/* libpastry.h
+/* pastry-glassed.h
  *
  * Copyright 2025 Eva M
  *
@@ -20,27 +20,38 @@
 
 #pragma once
 
+#ifndef LIBPASTRY_INSIDE
+#error "Only <libpastry.h> can be included directly."
+#endif
+
+#include "libpastry-version-macros.h"
+
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define LIBPASTRY_INSIDE
-#include "libpastry-version-macros.h"
-#include "pastry-animation.h"
-#include "pastry-glass-frame.h"
-#include "pastry-glass-root.h"
-#include "pastry-glassed.h"
-#include "pastry-grid-spinner.h"
-#include "pastry-property-trail.h"
-#include "pastry-settings.h"
-#include "pastry-sound-theme.h"
-#include "pastry-spinner.h"
-#include "pastry-theme.h"
-#include "pastry-visual-theme.h"
-#undef LIBPASTRY_INSIDE
+#define PASTRY_TYPE_GLASSED (pastry_glassed_get_type ())
+G_DECLARE_INTERFACE (PastryGlassed, pastry_glassed, PASTRY, GLASSED, GtkWidget)
+
+struct _PastryGlassedInterface
+{
+  GTypeInterface parent_iface;
+
+  gboolean (*place_glass) (PastryGlassed  *self,
+                           GskRoundedRect *dest);
+
+  void (*snapshot_overlay) (PastryGlassed *self,
+                            GtkSnapshot   *snapshot);
+};
+
+LIBPASTRY_AVAILABLE_IN_ALL
+gboolean
+pastry_glassed_place_glass (PastryGlassed  *self,
+                            GskRoundedRect *dest);
 
 LIBPASTRY_AVAILABLE_IN_ALL
 void
-pastry_init (void);
+pastry_glassed_snapshot_overlay (PastryGlassed *self,
+                                 GtkSnapshot   *snapshot);
 
 G_END_DECLS

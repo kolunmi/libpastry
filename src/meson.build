@@ -2,27 +2,33 @@ api_version = '0.1'
 
 libpastry_sources = [
   'libpastry.c',
-  'pastry-util.c',
+  'pastry-animation.c',
+  'pastry-glass-frame.c',
+  'pastry-glass-root.c',
+  'pastry-glassed.c',
+  'pastry-grid-spinner.c',
   'pastry-property-trail.c',
   'pastry-settings.c',
-  'pastry-theme.c',
-  'pastry-visual-theme.c',
   'pastry-sound-theme.c',
-  'pastry-animation.c',
   'pastry-spinner.c',
-  'pastry-grid-spinner.c',
+  'pastry-theme.c',
+  'pastry-util.c',
+  'pastry-visual-theme.c',
 ]
 
 libpastry_headers = [
   'libpastry.h',
+  'pastry-animation.h',
+  'pastry-glass-frame.h',
+  'pastry-glass-root.h',
+  'pastry-glassed.h',
+  'pastry-grid-spinner.h',
   'pastry-property-trail.h',
   'pastry-settings.h',
+  'pastry-sound-theme.h',
+  'pastry-spinner.h',
   'pastry-theme.h',
   'pastry-visual-theme.h',
-  'pastry-sound-theme.h',
-  'pastry-animation.h',
-  'pastry-spinner.h',
-  'pastry-grid-spinner.h',
 ]
 
 version_split = meson.project_version().split('.')
