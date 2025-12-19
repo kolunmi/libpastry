@@ -172,13 +172,14 @@ snapshot (GtkWidget   *widget,
   g_hash_table_iter_init (&iter, self->rrects_cache);
   for (guint i = 0;; i++)
     {
-      PastryGlassed  *glassed        = NULL;
-      GskRoundedRect *rrect          = NULL;
-      gboolean        valid          = FALSE;
-      graphene_rect_t bounds         = { 0 };
-      graphene_rect_t clip           = { 0 };
-      g_autoptr (GskRenderNode) node = NULL;
-      GtkWidget *glass_widget        = NULL;
+      PastryGlassed   *glassed                 = NULL;
+      GskRoundedRect  *rrect                   = NULL;
+      gboolean         valid                   = FALSE;
+      graphene_rect_t  bounds                  = { 0 };
+      graphene_point_t offset                  = { 0 };
+      g_autoptr (GskRenderNode) aggregate_node = NULL;
+      GtkWidget *glass_widget                  = NULL;
+      g_autoptr (GskRenderNode) glass_node     = NULL;
 
       valid = g_hash_table_iter_next (
           &iter,
@@ -192,41 +193,50 @@ snapshot (GtkWidget   *widget,
       if (!valid)
         continue;
 
-      clip = GRAPHENE_RECT_INIT (
-          bounds.origin.x + rrect->bounds.origin.x,
-          bounds.origin.y + rrect->bounds.origin.y,
-          rrect->bounds.size.width,
-          rrect->bounds.size.height);
+      offset = GRAPHENE_POINT_INIT (
+          bounds.origin.x,
+          bounds.origin.y);
 
-      node = gtk_snapshot_to_node (tmp_snapshot);
+      aggregate_node = gtk_snapshot_to_node (tmp_snapshot);
+      g_clear_object (&tmp_snapshot);
+
+      g_assert (i < self->glass_widgets->len);
+      glass_widget = g_ptr_array_index (self->glass_widgets, i);
+      tmp_snapshot = gtk_snapshot_new ();
+      gtk_widget_snapshot_child (widget, glass_widget, tmp_snapshot);
+      glass_node = gtk_snapshot_to_node (tmp_snapshot);
       g_clear_object (&tmp_snapshot);
 
       tmp_snapshot = gtk_snapshot_new ();
 
+      /* draw everything outside of the blurred area */
       gtk_snapshot_push_mask (tmp_snapshot, GSK_MASK_MODE_INVERTED_ALPHA);
-      gtk_snapshot_append_color (
-          tmp_snapshot,
-          &(const GdkRGBA) { .alpha = 1.0 },
-          &clip);
-      gtk_snapshot_pop (tmp_snapshot);
-      gtk_snapshot_append_node (tmp_snapshot, node);
-      gtk_snapshot_pop (tmp_snapshot);
-
-      gtk_snapshot_push_clip (tmp_snapshot, &clip);
-      gtk_snapshot_push_blur (tmp_snapshot, 32.0);
-      gtk_snapshot_append_node (tmp_snapshot, node);
-      gtk_snapshot_pop (tmp_snapshot);
-
       gtk_snapshot_save (tmp_snapshot);
-      gtk_snapshot_translate (tmp_snapshot, &GRAPHENE_POINT_INIT (bounds.origin.x, bounds.origin.y));
-
-      g_assert (i < self->glass_widgets->len);
-      glass_widget = g_ptr_array_index (self->glass_widgets, i);
-      gtk_widget_snapshot_child (widget, glass_widget, tmp_snapshot);
-      pastry_glassed_snapshot_overlay (glassed, tmp_snapshot);
-
+      gtk_snapshot_translate (tmp_snapshot, &offset);
+      gtk_snapshot_append_node (tmp_snapshot, glass_node);
       gtk_snapshot_restore (tmp_snapshot);
       gtk_snapshot_pop (tmp_snapshot);
+      gtk_snapshot_append_node (tmp_snapshot, aggregate_node);
+      gtk_snapshot_pop (tmp_snapshot);
+
+      /* draw the blurred area inside the glass widget */
+      gtk_snapshot_push_mask (tmp_snapshot, GSK_MASK_MODE_ALPHA);
+      gtk_snapshot_save (tmp_snapshot);
+      gtk_snapshot_translate (tmp_snapshot, &offset);
+      gtk_snapshot_append_node (tmp_snapshot, glass_node);
+      gtk_snapshot_restore (tmp_snapshot);
+      gtk_snapshot_pop (tmp_snapshot);
+      gtk_snapshot_push_blur (tmp_snapshot, 64.0);
+      gtk_snapshot_append_node (tmp_snapshot, aggregate_node);
+      gtk_snapshot_pop (tmp_snapshot);
+      gtk_snapshot_pop (tmp_snapshot);
+
+      /* Append the glass widget and its overlay */
+      gtk_snapshot_save (tmp_snapshot);
+      gtk_snapshot_translate (tmp_snapshot, &offset);
+      gtk_snapshot_append_node (tmp_snapshot, glass_node);
+      pastry_glassed_snapshot_overlay (glassed, tmp_snapshot);
+      gtk_snapshot_restore (tmp_snapshot);
     }
 
   final_node = gtk_snapshot_to_node (tmp_snapshot);
