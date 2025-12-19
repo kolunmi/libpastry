@@ -27,6 +27,7 @@
 #define G_LOG_DOMAIN "PASTRY::GLASS-ROOT"
 
 #define DEFAULT_N_GLASS_WIDGETS 8
+#define DEFAULT_BLUR_RADIUS     32.0
 
 #include "config.h"
 
@@ -40,6 +41,7 @@ enum
 
   PROP_CHILD,
   PROP_CAPACITY,
+  PROP_BLUR_RADIUS,
 
   LAST_PROP
 };
@@ -50,6 +52,7 @@ struct _PastryGlassRoot
   GtkWidget parent_instance;
 
   GtkWidget *child;
+  double     blur_radius;
 
   GPtrArray  *glass_widgets;
   GHashTable *rrects_cache;
@@ -95,6 +98,9 @@ get_property (GObject    *object,
     case PROP_CAPACITY:
       g_value_set_int (value, pastry_glass_root_get_capacity (self));
       break;
+    case PROP_BLUR_RADIUS:
+      g_value_set_double (value, pastry_glass_root_get_blur_radius (self));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
@@ -115,6 +121,9 @@ set_property (GObject      *object,
       break;
     case PROP_CAPACITY:
       pastry_glass_root_set_capacity (self, g_value_get_int (value));
+      break;
+    case PROP_BLUR_RADIUS:
+      pastry_glass_root_set_blur_radius (self, g_value_get_double (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -226,7 +235,7 @@ snapshot (GtkWidget   *widget,
       gtk_snapshot_append_node (tmp_snapshot, glass_node);
       gtk_snapshot_restore (tmp_snapshot);
       gtk_snapshot_pop (tmp_snapshot);
-      gtk_snapshot_push_blur (tmp_snapshot, 64.0);
+      gtk_snapshot_push_blur (tmp_snapshot, self->blur_radius);
       gtk_snapshot_append_node (tmp_snapshot, aggregate_node);
       gtk_snapshot_pop (tmp_snapshot);
       gtk_snapshot_pop (tmp_snapshot);
@@ -277,6 +286,18 @@ pastry_glass_root_class_init (PastryGlassRootClass *klass)
           1, 16, DEFAULT_N_GLASS_WIDGETS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
+  /**
+   * PastryGlassRoot:blur-radius:
+   *
+   * The blur radius of the glass effect
+   */
+  props[PROP_BLUR_RADIUS] =
+      g_param_spec_double (
+          "blur-radius",
+          NULL, NULL,
+          0.0, 128.0, DEFAULT_BLUR_RADIUS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
   g_object_class_install_properties (object_class, LAST_PROP, props);
 
   widget_class->measure       = measure;
@@ -293,6 +314,8 @@ pastry_glass_root_init (PastryGlassRoot *self)
       (GDestroyNotify) gtk_widget_unparent);
   g_ptr_array_set_size (self->glass_widgets, DEFAULT_N_GLASS_WIDGETS);
   fill_glass_widgets (self, 0);
+
+  self->blur_radius = DEFAULT_BLUR_RADIUS;
 
   self->rrects_cache = g_hash_table_new_full (
       g_direct_hash, g_direct_equal, g_object_unref, g_free);
@@ -383,6 +406,42 @@ pastry_glass_root_get_capacity (PastryGlassRoot *self)
 {
   g_return_val_if_fail (PASTRY_IS_GLASS_ROOT (self), 0.0);
   return self->glass_widgets->len;
+}
+
+/**
+ * pastry_glass_root_set_blur_radius:
+ * @self: a `PastryGlassRoot`
+ * @blur_radius: the blur radius
+ *
+ * Sets the blur radius of the glass effect
+ */
+void
+pastry_glass_root_set_blur_radius (PastryGlassRoot *self,
+                                   double           blur_radius)
+{
+  g_return_if_fail (PASTRY_IS_GLASS_ROOT (self));
+
+  if (blur_radius == self->blur_radius)
+    return;
+  self->blur_radius = blur_radius;
+
+  gtk_widget_queue_draw (GTK_WIDGET (self));
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_BLUR_RADIUS]);
+}
+
+/**
+ * pastry_glass_root_get_blur_radius
+ * @self: a `PastryGlassRoot`
+ *
+ * Gets the blur radius of the glass effect
+ *
+ * Returns: the blur radius for @self
+ */
+double
+pastry_glass_root_get_blur_radius (PastryGlassRoot *self)
+{
+  g_return_val_if_fail (PASTRY_IS_GLASS_ROOT (self), 0.0);
+  return self->blur_radius;
 }
 
 static gboolean

@@ -51,4 +51,13 @@ LIBPASTRY_AVAILABLE_IN_ALL
 int
 pastry_glass_root_get_capacity (PastryGlassRoot *self);
 
+LIBPASTRY_AVAILABLE_IN_ALL
+void
+pastry_glass_root_set_blur_radius (PastryGlassRoot *self,
+                                   double           blur_radius);
+
+LIBPASTRY_AVAILABLE_IN_ALL
+double
+pastry_glass_root_get_blur_radius (PastryGlassRoot *self);
+
 G_END_DECLS
