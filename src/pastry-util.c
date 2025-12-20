@@ -1,4 +1,4 @@
-/* pastry-animation.c
+/* pastry-util.c
  *
  * Copyright 2025 Eva M
  *
