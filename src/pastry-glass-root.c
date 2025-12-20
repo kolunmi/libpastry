@@ -489,7 +489,8 @@ search_glass_allocate (PastryGlassRoot *self,
             }
         }
 
-      if (!search_glass_allocate (self, child))
+      if (!PASTRY_IS_GLASS_ROOT (child) &&
+          !search_glass_allocate (self, child))
         /* ran out of capacity */
         return FALSE;
     }
