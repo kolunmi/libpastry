@@ -326,6 +326,7 @@ pastry_property_trail_get_trail (PastryPropertyTrail *self)
 static void
 dig (PastryPropertyTrail *self)
 {
+  GType parent_prop_type     = G_TYPE_NONE;
   g_autoptr (GObject) object = NULL;
   guint n_items              = 0;
 
@@ -355,6 +356,8 @@ dig (PastryPropertyTrail *self)
       if (pspec != NULL)
         {
           gboolean setup = TRUE;
+
+          parent_prop_type = pspec->value_type;
 
           if (i < self->objects->len)
             {
@@ -401,8 +404,11 @@ dig (PastryPropertyTrail *self)
         }
       else
         {
-          g_critical ("Property \"%s\" doesn't exist on class %s",
-                      property, G_OBJECT_TYPE_NAME (object));
+          if (!G_TYPE_IS_INTERFACE (parent_prop_type))
+            /* Don't complain if the property was an interface, since the trail
+               may be targeting a specific object type */
+            g_critical ("Property \"%s\" doesn't exist on class %s",
+                        property, G_OBJECT_TYPE_NAME (object));
           g_clear_object (&object);
           break;
         }
