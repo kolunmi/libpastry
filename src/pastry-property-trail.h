@@ -56,4 +56,8 @@ LIBPASTRY_AVAILABLE_IN_ALL
 GListModel *
 pastry_property_trail_get_trail (PastryPropertyTrail *self);
 
+LIBPASTRY_AVAILABLE_IN_ALL
+gpointer
+pastry_property_trail_dup_resolved (PastryPropertyTrail *self);
+
 G_END_DECLS

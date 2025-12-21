@@ -38,6 +38,7 @@ enum
 
   PROP_OBJECT,
   PROP_TRAIL,
+  PROP_RESOLVED,
 
   LAST_PROP
 };
@@ -57,6 +58,7 @@ struct _PastryPropertyTrail
 
   GObject    *object;
   GListModel *trail;
+  GObject    *resolved;
 
   GPtrArray *objects;
 };
@@ -84,6 +86,7 @@ dispose (GObject *object)
   pastry_clear_pointers (
       &self->object, g_object_unref,
       &self->trail, g_object_unref,
+      &self->resolved, g_object_unref,
       NULL);
 
   G_OBJECT_CLASS (pastry_property_trail_parent_class)->dispose (object);
@@ -104,6 +107,9 @@ get_property (GObject    *object,
       break;
     case PROP_TRAIL:
       g_value_set_object (value, pastry_property_trail_get_trail (self));
+      break;
+    case PROP_RESOLVED:
+      g_value_take_object (value, pastry_property_trail_dup_resolved (self));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -126,6 +132,7 @@ set_property (GObject      *object,
     case PROP_TRAIL:
       pastry_property_trail_set_trail (self, g_value_get_object (value));
       break;
+    case PROP_RESOLVED:
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
@@ -164,6 +171,18 @@ pastry_property_trail_class_init (PastryPropertyTrailClass *klass)
           NULL, NULL,
           G_TYPE_LIST_MODEL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
+  /**
+   * PastryPropertyTrail:resolved:
+   *
+   * The currently resolved object.
+   */
+  props[PROP_RESOLVED] =
+      g_param_spec_object (
+          "resolved",
+          NULL, NULL,
+          G_TYPE_OBJECT,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
   g_object_class_install_properties (object_class, LAST_PROP, props);
 
@@ -323,6 +342,29 @@ pastry_property_trail_get_trail (PastryPropertyTrail *self)
   return self->trail;
 }
 
+/**
+ * pastry_property_trail_dup_resolved:
+ * @self: a `PastryPropertyTrail`
+ *
+ * Gets the currently "resolved" object for @self, meaning the object with the
+ * greatest depth in the trail spec.
+ *
+ * This may not be the last property in the list model. If the last property is
+ * not of type `GObject`, then the previous property's value will be returned.
+ *
+ * Returns: (nullable) (transfer full): the currently resolved object for @self
+ */
+gpointer
+pastry_property_trail_dup_resolved (PastryPropertyTrail *self)
+{
+  g_return_val_if_fail (PASTRY_IS_PROPERTY_TRAIL (self), NULL);
+
+  if (self->resolved != NULL)
+    return g_object_ref (self->resolved);
+  else
+    return NULL;
+}
+
 static void
 dig (PastryPropertyTrail *self)
 {
@@ -334,8 +376,7 @@ dig (PastryPropertyTrail *self)
       self->trail == NULL)
     {
       clear (self, 0);
-      g_signal_emit (self, signals[SIGNAL_CHANGED], 0, NULL);
-      return;
+      goto done;
     }
 
   object = g_object_ref (self->object);
@@ -414,7 +455,13 @@ dig (PastryPropertyTrail *self)
         }
     }
 
+done:
+  g_clear_object (&self->resolved);
+  if (object != NULL)
+    self->resolved = g_object_ref (object);
+
   g_signal_emit (self, signals[SIGNAL_CHANGED], 0, object);
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_RESOLVED]);
 }
 
 static void
@@ -428,7 +475,6 @@ clear (PastryPropertyTrail *self,
       object = g_ptr_array_index (self->objects, i);
       g_signal_handlers_disconnect_by_func (object, property_changed_cb, self);
     }
-
   g_ptr_array_set_size (self->objects, from);
 }
 
