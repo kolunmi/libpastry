@@ -22,6 +22,7 @@
 
 #include "config.h"
 
+#include "pastry-glass-root.h"
 #include "pastry-glassed.h"
 
 G_DEFINE_INTERFACE (PastryGlassed, pastry_glassed, GTK_TYPE_WIDGET)
@@ -85,4 +86,23 @@ pastry_glassed_snapshot_overlay (PastryGlassed *self,
   PASTRY_GLASSED_GET_IFACE (self)->snapshot_overlay (
       self,
       snapshot);
+}
+
+void
+pastry_glassed_queue_draw (PastryGlassed *self)
+{
+  GtkWidget *glass_root = NULL;
+
+  g_return_if_fail (PASTRY_IS_GLASSED (self));
+
+  glass_root = gtk_widget_get_ancestor (GTK_WIDGET (self), PASTRY_TYPE_GLASS_ROOT);
+  if (glass_root == NULL)
+    {
+      g_critical ("%s object lacks a %s ancestor, so it cannot queue a a redraw",
+                  g_type_name (PASTRY_TYPE_GLASSED), g_type_name (PASTRY_TYPE_GLASS_ROOT));
+      return;
+    }
+
+  gtk_widget_queue_allocate (glass_root);
+  gtk_widget_queue_draw (glass_root);
 }

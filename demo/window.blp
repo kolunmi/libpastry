@@ -1,89 +1,136 @@
 using Gtk 4.0;
 
 $PastryGlassRoot root {
-  child: Box {
-    styles [
-      "main-bg",
-    ]
+  child: $PastryAnnotationOverlay {
+    child: Box {
+      styles [
+        "main-bg",
+      ]
 
-    orientation: vertical;
-    spacing: 20;
+      orientation: vertical;
+      spacing: 20;
 
-    DropDown {
-      notify::selected-item => $set_theme_cb();
-      model: StringList {
-        strings [
-        "Default",
-        "Purple",
-        "Green",
-        "Blue",
-        "Red",
-        "Pink",
-        "Orange",
-        ]
-      };
-    }
+      DropDown {
+        notify::selected-item => $set_theme_cb();
+        model: StringList {
+          strings [
+            "Default",
+            "Purple",
+            "Green",
+            "Blue",
+            "Red",
+            "Pink",
+            "Orange",
+          ]
+        };
+      }
 
-    $PastryGlassFrame {
-      vexpand: true;
-      margin-start: 30;
-      margin-end: 30;
-      margin-top: 30;
-      margin-bottom: 30;
+      $PastryGlassFrame {
+        vexpand: true;
+        margin-start: 30;
+        margin-end: 30;
+        margin-top: 30;
+        margin-bottom: 30;
 
-      child: Box {
-        orientation: vertical;
-        margin-start: 10;
-        margin-end: 10;
-        margin-top: 10;
-        margin-bottom: 10;
+        child: Box {
+          orientation: vertical;
+          margin-start: 10;
+          margin-end: 10;
+          margin-top: 10;
+          margin-bottom: 10;
 
-        Label {
-          xalign: 0.0;
-          label: "Please choose the option which is not like the others";
-        }
-
-        Grid {
-          column-spacing: 7;
-          row-spacing: 7;
-
-          Button {
-            label: "Option A";
-
-            layout {
-              column: 0;
-              row: 0;
-            }
+          Label {
+            xalign: 0.0;
+            label: "Please choose the option which is not like the others";
           }
 
-          Button {
-            label: "Option B";
+          Grid {
+            column-spacing: 7;
+            row-spacing: 7;
 
-            layout {
-              column: 1;
-              row: 0;
+            Button {
+              has-tooltip: true;
+              tooltip-text: "AAA";
+              label: "Option A";
+
+              layout {
+                column: 0;
+                row: 0;
+              }
+            }
+
+            Button {
+              tooltip-text: "BBB";
+              label: "Option B";
+
+              layout {
+                column: 1;
+                row: 0;
+              }
+            }
+
+            Button {
+              tooltip-text: "CCC";
+              label: "Option C";
+
+              layout {
+                column: 0;
+                row: 1;
+              }
+            }
+
+            Button {
+              tooltip-text: "DDD";
+              label: "Option D";
+
+              layout {
+                column: 1;
+                row: 1;
+              }
+            }
+
+            Button {
+              tooltip-text: "YYY";
+              label: "Option Y";
+
+              layout {
+                column: 2;
+                row: 0;
+              }
+            }
+
+            Button {
+              tooltip-text: "ZZZ";
+              label: "Option Z";
+
+              layout {
+                column: 2;
+                row: 1;
+              }
+            }
+
+            Button {
+              tooltip-text: "WWW";
+              label: "Option W";
+
+              layout {
+                column: 3;
+                row: 0;
+              }
+            }
+
+            Button {
+              tooltip-text: "ZZZ";
+              label: "Option Z";
+
+              layout {
+                column: 3;
+                row: 1;
+              }
             }
           }
-
-          Button {
-            label: "Option C";
-
-            layout {
-              column: 0;
-              row: 1;
-            }
-          }
-
-          Button {
-            label: "Option D";
-
-            layout {
-              column: 1;
-              row: 1;
-            }
-          }
-        }
-      };
-    }
+        };
+      }
+    };
   };
 }

@@ -3,6 +3,7 @@ api_version = '0.1'
 libpastry_sources = [
   'libpastry.c',
   'pastry-animation.c',
+  'pastry-annotation-overlay.c',
   'pastry-glass-frame.c',
   'pastry-glass-root.c',
   'pastry-glassed.c',
@@ -19,6 +20,7 @@ libpastry_sources = [
 libpastry_headers = [
   'libpastry.h',
   'pastry-animation.h',
+  'pastry-annotation-overlay.h',
   'pastry-glass-frame.h',
   'pastry-glass-root.h',
   'pastry-glassed.h',

@@ -1,4 +1,4 @@
-/* pastry-glassed.h
+/* pastry-annotation-overlay.h
  *
  * Copyright 2025 Eva M
  *
@@ -30,32 +30,17 @@
 
 G_BEGIN_DECLS
 
-#define PASTRY_TYPE_GLASSED (pastry_glassed_get_type ())
-G_DECLARE_INTERFACE (PastryGlassed, pastry_glassed, PASTRY, GLASSED, GtkWidget)
-
-struct _PastryGlassedInterface
-{
-  GTypeInterface parent_iface;
-
-  gboolean (*place_glass) (PastryGlassed  *self,
-                           GskRoundedRect *dest);
-
-  void (*snapshot_overlay) (PastryGlassed *self,
-                            GtkSnapshot   *snapshot);
-};
-
-LIBPASTRY_AVAILABLE_IN_ALL
-gboolean
-pastry_glassed_place_glass (PastryGlassed  *self,
-                            GskRoundedRect *dest);
+#define PASTRY_TYPE_ANNOTATION_OVERLAY (pastry_annotation_overlay_get_type ())
+G_DECLARE_FINAL_TYPE (PastryAnnotationOverlay, pastry_annotation_overlay, PASTRY, ANNOTATION_OVERLAY, GtkWidget)
 
 LIBPASTRY_AVAILABLE_IN_ALL
 void
-pastry_glassed_snapshot_overlay (PastryGlassed *self,
-                                 GtkSnapshot   *snapshot);
+pastry_annotation_overlay_set_child (PastryAnnotationOverlay *self,
+                             GtkWidget       *child);
 
 LIBPASTRY_AVAILABLE_IN_ALL
-void
-pastry_glassed_queue_draw (PastryGlassed *self);
+GtkWidget *
+pastry_annotation_overlay_get_child (PastryAnnotationOverlay *self);
+
 
 G_END_DECLS

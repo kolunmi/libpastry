@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 #define LIBPASTRY_INSIDE
 #include "libpastry-version-macros.h"
 #include "pastry-animation.h"
+#include "pastry-annotation-overlay.h"
 #include "pastry-glass-frame.h"
 #include "pastry-glass-root.h"
 #include "pastry-glassed.h"

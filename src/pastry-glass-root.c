@@ -54,14 +54,29 @@ struct _PastryGlassRoot
   GtkWidget *child;
   double     blur_radius;
 
-  GPtrArray  *glass_widgets;
-  GHashTable *rrects_cache;
+  GPtrArray *glass_widgets;
+  GPtrArray *caches;
 };
 
 G_DEFINE_FINAL_TYPE (PastryGlassRoot, pastry_glass_root, GTK_TYPE_WIDGET)
 
+typedef struct
+{
+  GtkWidget      *widget;
+  graphene_rect_t bounds;
+} GlassChild;
+static void
+destroy_glass_child (GlassChild *self)
+{
+  pastry_clear_pointers (
+      &self->widget, g_object_unref,
+      NULL);
+  g_free (self);
+}
+
 static gboolean
 search_glass_allocate (PastryGlassRoot *self,
+                       int              baseline,
                        GtkWidget       *widget);
 
 static void
@@ -76,7 +91,7 @@ dispose (GObject *object)
   pastry_clear_pointers (
       &self->child, gtk_widget_unparent,
       &self->glass_widgets, g_ptr_array_unref,
-      &self->rrects_cache, g_hash_table_unref,
+      &self->caches, g_ptr_array_unref,
       NULL);
 
   G_OBJECT_CLASS (pastry_glass_root_parent_class)->dispose (object);
@@ -156,12 +171,11 @@ size_allocate (GtkWidget *widget,
 {
   PastryGlassRoot *self = PASTRY_GLASS_ROOT (widget);
 
-  g_hash_table_remove_all (self->rrects_cache);
-
+  g_ptr_array_set_size (self->caches, 0);
   if (self->child != NULL && gtk_widget_should_layout (self->child))
     {
       gtk_widget_allocate (self->child, width, height, baseline, NULL);
-      search_glass_allocate (self, self->child);
+      search_glass_allocate (self, baseline, self->child);
     }
 }
 
@@ -171,46 +185,26 @@ snapshot (GtkWidget   *widget,
 {
   PastryGlassRoot *self                = PASTRY_GLASS_ROOT (widget);
   g_autoptr (GtkSnapshot) tmp_snapshot = NULL;
-  GHashTableIter iter                  = { 0 };
   g_autoptr (GskRenderNode) final_node = NULL;
 
   tmp_snapshot = gtk_snapshot_new ();
   if (self->child != NULL)
     gtk_widget_snapshot_child (widget, self->child, tmp_snapshot);
 
-  g_hash_table_iter_init (&iter, self->rrects_cache);
-  for (guint i = 0;; i++)
+  for (guint i = self->caches->len; i >= 1; i--)
     {
-      PastryGlassed   *glassed                 = NULL;
-      GskRoundedRect  *rrect                   = NULL;
-      gboolean         valid                   = FALSE;
-      graphene_rect_t  bounds                  = { 0 };
-      graphene_point_t offset                  = { 0 };
+      GlassChild *cache                        = NULL;
       g_autoptr (GskRenderNode) aggregate_node = NULL;
       GtkWidget *glass_widget                  = NULL;
       g_autoptr (GskRenderNode) glass_node     = NULL;
 
-      valid = g_hash_table_iter_next (
-          &iter,
-          (gpointer *) &glassed,
-          (gpointer *) &rrect);
-      if (!valid)
-        break;
-
-      valid = gtk_widget_compute_bounds (
-          GTK_WIDGET (glassed), widget, &bounds);
-      if (!valid)
-        continue;
-
-      offset = GRAPHENE_POINT_INIT (
-          bounds.origin.x,
-          bounds.origin.y);
+      cache = g_ptr_array_index (self->caches, i - 1);
 
       aggregate_node = gtk_snapshot_to_node (tmp_snapshot);
       g_clear_object (&tmp_snapshot);
 
-      g_assert (i < self->glass_widgets->len);
-      glass_widget = g_ptr_array_index (self->glass_widgets, i);
+      g_assert (i - 1 < self->glass_widgets->len);
+      glass_widget = g_ptr_array_index (self->glass_widgets, i - 1);
       tmp_snapshot = gtk_snapshot_new ();
       gtk_widget_snapshot_child (widget, glass_widget, tmp_snapshot);
       glass_node = gtk_snapshot_to_node (tmp_snapshot);
@@ -220,20 +214,14 @@ snapshot (GtkWidget   *widget,
 
       /* draw everything outside of the blurred area */
       gtk_snapshot_push_mask (tmp_snapshot, GSK_MASK_MODE_INVERTED_ALPHA);
-      gtk_snapshot_save (tmp_snapshot);
-      gtk_snapshot_translate (tmp_snapshot, &offset);
       gtk_snapshot_append_node (tmp_snapshot, glass_node);
-      gtk_snapshot_restore (tmp_snapshot);
       gtk_snapshot_pop (tmp_snapshot);
       gtk_snapshot_append_node (tmp_snapshot, aggregate_node);
       gtk_snapshot_pop (tmp_snapshot);
 
       /* draw the blurred area inside the glass widget */
       gtk_snapshot_push_mask (tmp_snapshot, GSK_MASK_MODE_ALPHA);
-      gtk_snapshot_save (tmp_snapshot);
-      gtk_snapshot_translate (tmp_snapshot, &offset);
       gtk_snapshot_append_node (tmp_snapshot, glass_node);
-      gtk_snapshot_restore (tmp_snapshot);
       gtk_snapshot_pop (tmp_snapshot);
       gtk_snapshot_push_blur (tmp_snapshot, self->blur_radius);
       gtk_snapshot_append_node (tmp_snapshot, aggregate_node);
@@ -241,10 +229,10 @@ snapshot (GtkWidget   *widget,
       gtk_snapshot_pop (tmp_snapshot);
 
       /* Append the glass widget and its overlay */
-      gtk_snapshot_save (tmp_snapshot);
-      gtk_snapshot_translate (tmp_snapshot, &offset);
       gtk_snapshot_append_node (tmp_snapshot, glass_node);
-      pastry_glassed_snapshot_overlay (glassed, tmp_snapshot);
+      gtk_snapshot_save (tmp_snapshot);
+      gtk_snapshot_translate (tmp_snapshot, &cache->bounds.origin);
+      pastry_glassed_snapshot_overlay (PASTRY_GLASSED (cache->widget), tmp_snapshot);
       gtk_snapshot_restore (tmp_snapshot);
     }
 
@@ -317,8 +305,8 @@ pastry_glass_root_init (PastryGlassRoot *self)
 
   self->blur_radius = DEFAULT_BLUR_RADIUS;
 
-  self->rrects_cache = g_hash_table_new_full (
-      g_direct_hash, g_direct_equal, g_object_unref, g_free);
+  self->caches = g_ptr_array_new_with_free_func (
+      (GDestroyNotify) destroy_glass_child);
 }
 
 /**
@@ -446,51 +434,58 @@ pastry_glass_root_get_blur_radius (PastryGlassRoot *self)
 
 static gboolean
 search_glass_allocate (PastryGlassRoot *self,
+                       int              baseline,
                        GtkWidget       *widget)
 {
+  if (PASTRY_IS_GLASSED (widget))
+    {
+      GskRoundedRect rrect    = { 0 };
+      gboolean       do_glass = FALSE;
+
+      do_glass = pastry_glassed_place_glass (PASTRY_GLASSED (widget), &rrect);
+      if (do_glass)
+        {
+          guint           idx                = 0;
+          graphene_rect_t bounds             = { 0 };
+          GtkWidget      *glass_widget       = NULL;
+          g_autoptr (GskTransform) transform = NULL;
+          GlassChild *cache                  = NULL;
+
+          idx = self->caches->len;
+          g_assert (idx < self->glass_widgets->len);
+
+          g_assert (gtk_widget_compute_bounds (widget, GTK_WIDGET (self), &bounds));
+          glass_widget = g_ptr_array_index (self->glass_widgets, idx);
+          transform    = gsk_transform_translate (
+              NULL, &GRAPHENE_POINT_INIT (
+                        rrect.bounds.origin.x + bounds.origin.x,
+                        rrect.bounds.origin.y + bounds.origin.y));
+          gtk_widget_allocate (
+              glass_widget,
+              rrect.bounds.size.width,
+              rrect.bounds.size.height,
+              baseline,
+              g_steal_pointer (&transform));
+
+          if (self->caches->len >= self->glass_widgets->len)
+            {
+              g_critical ("Too many PastryGlassed children for capacity %d", self->glass_widgets->len);
+              return FALSE;
+            }
+
+          cache         = g_new0 (typeof (*cache), 1);
+          cache->widget = g_object_ref (widget);
+          cache->bounds = bounds;
+          g_ptr_array_add (self->caches, cache);
+        }
+    }
+
   for (GtkWidget *child = gtk_widget_get_first_child (widget);
        child != NULL;
        child = gtk_widget_get_next_sibling (child))
     {
-      if (PASTRY_IS_GLASSED (child))
-        {
-          g_autofree GskRoundedRect *rrect    = NULL;
-          gboolean                   do_glass = FALSE;
-
-          rrect    = g_new0 (typeof (*rrect), 1);
-          do_glass = pastry_glassed_place_glass (PASTRY_GLASSED (child), rrect);
-
-          if (do_glass)
-            {
-              guint      idx          = 0;
-              GtkWidget *glass_widget = NULL;
-
-              idx = g_hash_table_size (self->rrects_cache);
-              g_assert (idx < self->glass_widgets->len);
-
-              glass_widget = g_ptr_array_index (self->glass_widgets, idx);
-              gtk_widget_allocate (
-                  glass_widget,
-                  rrect->bounds.size.width,
-                  rrect->bounds.size.height,
-                  -1, NULL);
-
-              if (!g_hash_table_contains (self->rrects_cache, child) &&
-                  g_hash_table_size (self->rrects_cache) >= self->glass_widgets->len)
-                {
-                  g_critical ("Too many PastryGlassed children for capacity %d", self->glass_widgets->len);
-                  return FALSE;
-                }
-
-              g_hash_table_replace (
-                  self->rrects_cache,
-                  g_object_ref (child),
-                  g_steal_pointer (&rrect));
-            }
-        }
-
       if (!PASTRY_IS_GLASS_ROOT (child) &&
-          !search_glass_allocate (self, child))
+          !search_glass_allocate (self, baseline, child))
         /* ran out of capacity */
         return FALSE;
     }
