@@ -211,6 +211,7 @@ place_glass (PastryGlassed  *glassed,
 {
   PastryAnnotationOverlay *self      = PASTRY_ANNOTATION_OVERLAY (glassed);
   GtkWidget               *widget    = GTK_WIDGET (glassed);
+  const char              *label     = NULL;
   g_autoptr (GtkWidget) focused      = NULL;
   double           width             = 0.0;
   double           height            = 0.0;
@@ -222,6 +223,10 @@ place_glass (PastryGlassed  *glassed,
   graphene_point_t tr                = { 0 };
   graphene_point_t bl                = { 0 };
   g_autoptr (GskTransform) transform = NULL;
+
+  label = gtk_label_get_label (GTK_LABEL (self->label));
+  if (label == NULL || *label == '\0')
+    return FALSE;
 
   focused = pastry_property_trail_dup_resolved (self->focus_trail);
   if (focused == NULL)
@@ -350,8 +355,8 @@ focus_changed_cb (PastryAnnotationOverlay *self,
   if (GTK_IS_WIDGET (widget))
     new_label = gtk_widget_get_tooltip_text (widget);
 
-  if (old_label == NULL &&
-      new_label == NULL)
+  if ((old_label == NULL || *old_label == '\0') &&
+      (new_label == NULL || *new_label == '\0'))
     return;
 
   gtk_label_set_label (GTK_LABEL (self->label), new_label);
