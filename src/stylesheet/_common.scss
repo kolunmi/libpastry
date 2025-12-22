@@ -4516,7 +4516,7 @@ pastry-glass-root > frame {
     border-style: solid;
     border-color: transparentize(darken($bg_color, 50%), 0.3);
     border-width: 1px;
-    background-image: image(transparentize($bg_color, 0.28));
+    background-image: image(transparentize($bg_color, 0.35));
 }
 
 pastry-annotation-overlay > label {
