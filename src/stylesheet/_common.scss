@@ -4522,3 +4522,20 @@ pastry-glass-root > frame {
 pastry-annotation-overlay > label {
     padding: 12px;
 }
+
+@keyframes rainbow-frame {
+  from { background-image: linear-gradient(.0turn, orange 0%, purple 100%); }
+  to { background-image: linear-gradient(1.0turn, orange 0%, purple 100%); }
+}
+
+pastry-focus-overlay {
+    > frame {
+        border-radius: 15px;
+        border-width: 0;
+        animation-name: rainbow-frame;
+        animation-duration: 5s;
+        animation-direction: normal;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+    }
+}

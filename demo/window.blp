@@ -2,18 +2,19 @@ using Gtk 4.0;
 
 $PastryGlassRoot root {
   child: $PastryAnnotationOverlay {
-    child: Box {
-      styles [
-        "main-bg",
-      ]
+    child: $PastryFocusOverlay {
+      child: Box {
+        styles [
+          "main-bg",
+        ]
 
-      orientation: vertical;
-      spacing: 20;
+        orientation: vertical;
+        spacing: 20;
 
-      DropDown {
-        notify::selected-item => $set_theme_cb();
-        model: StringList {
-          strings [
+        DropDown {
+          notify::selected-item => $set_theme_cb();
+          model: StringList {
+            strings [
             "Default",
             "Purple",
             "Green",
@@ -21,18 +22,12 @@ $PastryGlassRoot root {
             "Red",
             "Pink",
             "Orange",
-          ]
-        };
-      }
+            ]
+          };
+        }
 
-      $PastryGlassFrame {
-        vexpand: true;
-        margin-start: 30;
-        margin-end: 30;
-        margin-top: 30;
-        margin-bottom: 30;
-
-        child: Box {
+        Box {
+          vexpand: true;
           orientation: vertical;
           margin-start: 10;
           margin-end: 10;
@@ -121,8 +116,8 @@ $PastryGlassRoot root {
               }
             }
           }
-        };
-      }
+        }
+      };
     };
   };
 }

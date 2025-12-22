@@ -36,6 +36,7 @@ pastry_init (void)
 
   g_type_ensure (PASTRY_TYPE_ANIMATION);
   g_type_ensure (PASTRY_TYPE_ANNOTATION_OVERLAY);
+  g_type_ensure (PASTRY_TYPE_FOCUS_OVERLAY);
   g_type_ensure (PASTRY_TYPE_GLASSED);
   g_type_ensure (PASTRY_TYPE_GLASS_FRAME);
   g_type_ensure (PASTRY_TYPE_GLASS_ROOT);
