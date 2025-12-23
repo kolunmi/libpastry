@@ -28,6 +28,7 @@
 
 #include "config.h"
 
+#include "pastry-animation.h"
 #include "pastry-focus-overlay.h"
 #include "pastry-property-trail.h"
 #include "pastry-util.h"
@@ -50,6 +51,10 @@ struct _PastryFocusOverlay
 
   GtkWidget           *frame;
   PastryPropertyTrail *focus_trail;
+  PastryAnimation     *animation;
+
+  GtkWidget      *focus_widget;
+  graphene_rect_t frame_pos;
 };
 
 G_DEFINE_FINAL_TYPE (PastryFocusOverlay, pastry_focus_overlay, GTK_TYPE_WIDGET)
@@ -58,6 +63,12 @@ static void
 focus_changed_cb (PastryFocusOverlay  *self,
                   GtkWidget           *widget,
                   PastryPropertyTrail *trail);
+
+static void
+animate (PastryFocusOverlay *self,
+         const char         *key,
+         double              value,
+         gpointer            user_data);
 
 static void
 dispose (GObject *object)
@@ -71,6 +82,8 @@ dispose (GObject *object)
       &self->child, gtk_widget_unparent,
       &self->frame, gtk_widget_unparent,
       &self->focus_trail, g_object_unref,
+      &self->animation, g_object_unref,
+      &self->focus_widget, g_object_unref,
       NULL);
 
   G_OBJECT_CLASS (pastry_focus_overlay_parent_class)->dispose (object);
@@ -152,6 +165,10 @@ size_allocate (GtkWidget *widget,
       success = gtk_widget_compute_bounds (focus, widget, &bounds);
       if (success)
         {
+          bounds.origin.x += self->frame_pos.origin.x;
+          bounds.origin.y += self->frame_pos.origin.y;
+          bounds.size.width += self->frame_pos.size.width;
+          bounds.size.height += self->frame_pos.size.height;
           graphene_rect_inset (&bounds, -5.0, -5.0);
 
           gtk_widget_set_visible (self->frame, TRUE);
@@ -250,6 +267,8 @@ pastry_focus_overlay_init (PastryFocusOverlay *self)
   g_signal_connect_swapped (
       self->focus_trail, "changed",
       G_CALLBACK (focus_changed_cb), self);
+
+  self->animation = pastry_animation_new (GTK_WIDGET (self));
 }
 
 /**
@@ -302,5 +321,82 @@ focus_changed_cb (PastryFocusOverlay  *self,
                   GtkWidget           *widget,
                   PastryPropertyTrail *trail)
 {
+  gboolean        success      = FALSE;
+  graphene_rect_t old_bounds   = { 0 };
+  graphene_rect_t new_bounds   = { 0 };
+  graphene_rect_t animate_from = { 0 };
+
+  if (widget == NULL)
+    {
+      g_clear_object (&self->focus_widget);
+      gtk_widget_queue_allocate (GTK_WIDGET (self));
+      return;
+    }
+
+  if (self->focus_widget != NULL)
+    {
+      success = gtk_widget_compute_bounds (
+          widget, GTK_WIDGET (self), &old_bounds);
+      if (success)
+        {
+          success = gtk_widget_compute_bounds (
+              self->focus_widget, GTK_WIDGET (self), &new_bounds);
+          if (success)
+            {
+              animate_from.origin.x    = new_bounds.origin.x - (old_bounds.origin.x - self->frame_pos.origin.x);
+              animate_from.origin.y    = new_bounds.origin.y - (old_bounds.origin.y - self->frame_pos.origin.y);
+              animate_from.size.width  = new_bounds.size.width - (old_bounds.size.width - self->frame_pos.size.width);
+              animate_from.size.height = new_bounds.size.height - (old_bounds.size.height - self->frame_pos.size.height);
+            }
+        }
+    }
+  g_clear_object (&self->focus_widget);
+  self->focus_widget = g_object_ref (widget);
+
+  pastry_animation_add_spring (
+      self->animation,
+      "x",
+      animate_from.origin.x, 0.0,
+      1.0, 1.0, 1.0,
+      (PastryAnimationCallback) animate,
+      NULL, NULL);
+  pastry_animation_add_spring (
+      self->animation,
+      "y",
+      animate_from.origin.y, 0.0,
+      1.0, 1.0, 1.0,
+      (PastryAnimationCallback) animate,
+      NULL, NULL);
+  pastry_animation_add_spring (
+      self->animation,
+      "w",
+      animate_from.size.width, 0.0,
+      1.0, 1.0, 1.0,
+      (PastryAnimationCallback) animate,
+      NULL, NULL);
+  pastry_animation_add_spring (
+      self->animation,
+      "h",
+      animate_from.size.height, 0.0,
+      1.0, 1.0, 1.0,
+      (PastryAnimationCallback) animate,
+      NULL, NULL);
+}
+
+static void
+animate (PastryFocusOverlay *self,
+         const char         *key,
+         double              value,
+         gpointer            user_data)
+{
+  if (g_strcmp0 (key, "x") == 0)
+    self->frame_pos.origin.x = value;
+  else if (g_strcmp0 (key, "y") == 0)
+    self->frame_pos.origin.y = value;
+  else if (g_strcmp0 (key, "w") == 0)
+    self->frame_pos.size.width = value;
+  else if (g_strcmp0 (key, "h") == 0)
+    self->frame_pos.size.height = value;
+
   gtk_widget_queue_allocate (GTK_WIDGET (self));
 }

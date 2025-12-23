@@ -31,16 +31,27 @@ G_BEGIN_DECLS
 #define PASTRY_TYPE_ANIMATION (pastry_animation_get_type ())
 G_DECLARE_FINAL_TYPE (PastryAnimation, pastry_animation, PASTRY, ANIMATION, GObject)
 
-void
-pastry_animation_set_target (PastryAnimation *self,
-                             GObject         *target);
-GObject *
-pastry_animation_get_target (PastryAnimation *self);
+typedef void (*PastryAnimationCallback) (GtkWidget  *widget,
+                                         const char *key,
+                                         double      value,
+                                         gpointer    user_data);
+
+PastryAnimation *
+pastry_animation_new (GtkWidget *widget);
+
+GtkWidget *
+pastry_animation_dup_widget (PastryAnimation *self);
 
 void
-pastry_animation_set_property_name (PastryAnimation *self,
-                                    const char      *property_name);
-const char *
-pastry_animation_get_property_name (PastryAnimation *self);
+pastry_animation_add_spring (PastryAnimation        *self,
+                             const char             *key,
+                             double                  from,
+                             double                  to,
+                             double                  damping_ratio,
+                             double                  mass,
+                             double                  stiffness,
+                             PastryAnimationCallback cb,
+                             gpointer                user_data,
+                             GDestroyNotify          destroy_data);
 
 G_END_DECLS

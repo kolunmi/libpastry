@@ -29,8 +29,7 @@ enum
 {
   PROP_0,
 
-  PROP_TARGET,
-  PROP_PROPERTY_NAME,
+  PROP_WIDGET,
 
   LAST_PROP
 };
@@ -40,19 +39,56 @@ struct _PastryAnimation
 {
   GObject parent_instance;
 
-  GObject *target;
-  char    *property_name;
+  GtkWidget *widget;
+  GWeakRef   wr;
+
+  guint       tag;
+  GHashTable *data;
 };
 G_DEFINE_FINAL_TYPE (PastryAnimation, pastry_animation, G_TYPE_OBJECT)
+
+typedef struct
+{
+  double                  from;
+  double                  to;
+  double                  damping_ratio;
+  double                  mass;
+  double                  stiffness;
+  PastryAnimationCallback cb;
+  gpointer                user_data;
+  GDestroyNotify          destroy_data;
+  GTimer                 *timer;
+} SpringData;
+
+static gboolean
+tick_cb (GtkWidget     *widget,
+         GdkFrameClock *frame_clock,
+         GWeakRef      *wr);
+
+static void
+destroy_spring_data (gpointer ptr);
+
+static void
+destroy_wr (gpointer ptr);
 
 static void
 dispose (GObject *object)
 {
-  PastryAnimation *self = PASTRY_ANIMATION (object);
+  PastryAnimation *self        = PASTRY_ANIMATION (object);
+  g_autoptr (GtkWidget) widget = NULL;
+
+  widget = g_weak_ref_get (&self->wr);
+  if (widget != NULL)
+    {
+      gtk_widget_remove_tick_callback (widget, self->tag);
+      self->tag = 0;
+    }
+  g_clear_object (&widget);
+  g_weak_ref_clear (&self->wr);
 
   pastry_clear_pointers (
-      &self->target, g_object_unref,
-      &self->property_name, g_free,
+      &self->widget, g_object_unref,
+      &self->data, g_hash_table_unref,
       NULL);
 
   G_OBJECT_CLASS (pastry_animation_parent_class)->dispose (object);
@@ -68,11 +104,8 @@ get_property (GObject    *object,
 
   switch (prop_id)
     {
-    case PROP_TARGET:
-      g_value_set_object (value, pastry_animation_get_target (self));
-      break;
-    case PROP_PROPERTY_NAME:
-      g_value_set_string (value, pastry_animation_get_property_name (self));
+    case PROP_WIDGET:
+      g_value_take_object (value, pastry_animation_dup_widget (self));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -89,11 +122,9 @@ set_property (GObject      *object,
 
   switch (prop_id)
     {
-    case PROP_TARGET:
-      pastry_animation_set_target (self, g_value_get_object (value));
-      break;
-    case PROP_PROPERTY_NAME:
-      pastry_animation_set_property_name (self, g_value_get_string (value));
+    case PROP_WIDGET:
+      g_clear_object (&self->widget);
+      self->widget = g_value_dup_object (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -101,26 +132,42 @@ set_property (GObject      *object,
 }
 
 static void
+constructed (GObject *object)
+{
+  PastryAnimation *self = PASTRY_ANIMATION (object);
+
+  if (GTK_IS_WIDGET (self->widget))
+    {
+      GWeakRef *wr = NULL;
+
+      wr = g_new0 (typeof (*wr), 1);
+      g_weak_ref_init (wr, self);
+
+      self->tag = gtk_widget_add_tick_callback (
+          self->widget,
+          (GtkTickCallback) tick_cb,
+          wr, destroy_wr);
+    }
+  g_weak_ref_init (&self->wr, self->widget);
+  g_clear_object (&self->widget);
+}
+
+static void
 pastry_animation_class_init (PastryAnimationClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->constructed  = constructed;
   object_class->set_property = set_property;
   object_class->get_property = get_property;
   object_class->dispose      = dispose;
 
-  props[PROP_TARGET] =
+  props[PROP_WIDGET] =
       g_param_spec_object (
-          "target",
+          "widget",
           NULL, NULL,
-          G_TYPE_OBJECT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
-
-  props[PROP_PROPERTY_NAME] =
-      g_param_spec_string (
-          "property-name",
-          NULL, NULL, NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+          GTK_TYPE_WIDGET,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, LAST_PROP, props);
 }
@@ -128,49 +175,144 @@ pastry_animation_class_init (PastryAnimationClass *klass)
 static void
 pastry_animation_init (PastryAnimation *self)
 {
+  g_weak_ref_init (&self->wr, NULL);
+  self->data = g_hash_table_new_full (
+      g_str_hash, g_str_equal, g_free, destroy_spring_data);
+}
+
+PastryAnimation *
+pastry_animation_new (GtkWidget *widget)
+{
+  g_return_val_if_fail (GTK_IS_WIDGET (widget), NULL);
+  return g_object_new (
+      PASTRY_TYPE_ANIMATION,
+      "widget", widget,
+      NULL);
+}
+
+GtkWidget *
+pastry_animation_dup_widget (PastryAnimation *self)
+{
+  g_return_val_if_fail (PASTRY_IS_ANIMATION (self), NULL);
+  return g_weak_ref_get (&self->wr);
 }
 
 void
-pastry_animation_set_target (PastryAnimation *self,
-                             GObject         *target)
+pastry_animation_add_spring (PastryAnimation        *self,
+                             const char             *key,
+                             double                  from,
+                             double                  to,
+                             double                  damping_ratio,
+                             double                  mass,
+                             double                  stiffness,
+                             PastryAnimationCallback cb,
+                             gpointer                user_data,
+                             GDestroyNotify          destroy_data)
 {
+  g_autoptr (GtkWidget) widget = NULL;
+
   g_return_if_fail (PASTRY_IS_ANIMATION (self));
-  g_return_if_fail (target == NULL || G_IS_OBJECT (self));
+  g_return_if_fail (key != NULL);
+  g_return_if_fail (cb != NULL);
 
-  if (target == self->target)
-    return;
-  g_clear_object (&self->target);
-  if (target != NULL)
-    self->target = g_object_ref (target);
+  widget = g_weak_ref_get (&self->wr);
+  if (widget != NULL)
+    {
+      SpringData *data = NULL;
 
-  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_TARGET]);
+      data                = g_new0 (typeof (*data), 1);
+      data->from          = from;
+      data->to            = to;
+      data->damping_ratio = damping_ratio;
+      data->mass          = mass;
+      data->stiffness     = stiffness;
+      data->cb            = cb;
+      data->user_data     = user_data;
+      data->destroy_data  = destroy_data;
+      /* We'll fill this in on the first iteration */
+      data->timer = NULL;
+
+      g_hash_table_replace (self->data, g_strdup (key), data);
+      cb (widget, key, from, user_data);
+    }
+  else if (user_data != NULL &&
+           destroy_data != NULL)
+    destroy_data (user_data);
 }
 
-GObject *
-pastry_animation_get_target (PastryAnimation *self)
+static gboolean
+tick_cb (GtkWidget     *widget,
+         GdkFrameClock *frame_clock,
+         GWeakRef      *wr)
 {
-  g_return_val_if_fail (PASTRY_IS_ANIMATION (self), NULL);
-  return self->target;
+  g_autoptr (PastryAnimation) self = NULL;
+  GHashTableIter iter              = { 0 };
+
+  self = g_weak_ref_get (wr);
+  if (self == NULL)
+    return G_SOURCE_REMOVE;
+
+  g_hash_table_iter_init (&iter, self->data);
+  for (;;)
+    {
+      char       *key      = NULL;
+      SpringData *data     = NULL;
+      double      value    = 0.0;
+      gboolean    finished = FALSE;
+
+      if (!g_hash_table_iter_next (
+              &iter,
+              (gpointer *) &key,
+              (gpointer *) &data))
+        break;
+
+      if (data->timer == NULL)
+        {
+          data->timer = g_timer_new ();
+          value       = data->from;
+        }
+      else
+        {
+          double elapsed = 0.0;
+
+          elapsed = g_timer_elapsed (data->timer, NULL);
+
+          /* TODO: actually use the spring parameters */
+          value = data->from + 15.0 * elapsed * (data->to - data->from);
+        }
+
+      finished = G_APPROX_VALUE (value, data->to, 0.0001) ||
+                 (data->from > data->to && value < data->to) ||
+                 (data->from < data->to && value > data->to);
+      if (finished)
+        value = data->to;
+
+      data->cb (widget, key, value, data->user_data);
+
+      if (finished)
+        g_hash_table_iter_remove (&iter);
+    }
+
+  return G_SOURCE_CONTINUE;
 }
 
-void
-pastry_animation_set_property_name (PastryAnimation *self,
-                                    const char      *property_name)
+static void
+destroy_spring_data (gpointer ptr)
 {
-  g_return_if_fail (PASTRY_IS_ANIMATION (self));
+  SpringData *data = ptr;
 
-  if (property_name == self->property_name)
-    return;
-  g_clear_pointer (&self->property_name, g_free);
-  if (property_name != NULL)
-    self->property_name = g_strdup (property_name);
-
-  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_PROPERTY_NAME]);
+  if (data->destroy_data != NULL &&
+      data->user_data != NULL)
+    data->destroy_data (data->user_data);
+  g_clear_pointer (&data->timer, g_timer_destroy);
+  g_free (ptr);
 }
 
-const char *
-pastry_animation_get_property_name (PastryAnimation *self)
+static void
+destroy_wr (gpointer ptr)
 {
-  g_return_val_if_fail (PASTRY_IS_ANIMATION (self), NULL);
-  return self->property_name;
+  GWeakRef *wr = ptr;
+
+  g_weak_ref_clear (wr);
+  g_free (ptr);
 }
