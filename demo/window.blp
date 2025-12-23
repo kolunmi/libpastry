@@ -56,8 +56,8 @@ $PastryGlassRoot root {
               label: "Option B";
 
               layout {
-                column: 1;
-                row: 0;
+                column: 0;
+                row: 1;
               }
             }
 
@@ -65,8 +65,10 @@ $PastryGlassRoot root {
               label: "Option C";
 
               layout {
-                column: 0;
-                row: 1;
+                column: 1;
+                row: 0;
+                column-span: 1;
+                row-span: 2;
               }
             }
 
@@ -74,8 +76,10 @@ $PastryGlassRoot root {
               label: "Option D";
 
               layout {
-                column: 1;
+                column: 2;
                 row: 1;
+                column-span: 2;
+                row-span: 1;
               }
             }
 
@@ -89,30 +93,11 @@ $PastryGlassRoot root {
             }
 
             Button {
-              tooltip-text: "ZZZ";
-              label: "Option O";
-
-              layout {
-                column: 2;
-                row: 1;
-              }
-            }
-
-            Button {
               label: "Option W";
 
               layout {
                 column: 3;
                 row: 0;
-              }
-            }
-
-            Button {
-              label: "Option Z";
-
-              layout {
-                column: 3;
-                row: 1;
               }
             }
           }
