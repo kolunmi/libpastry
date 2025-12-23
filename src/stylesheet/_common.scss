@@ -4523,7 +4523,7 @@ pastry-annotation-overlay > label {
     padding: 12px;
 }
 
-$pastry_rainbow: purple 0%, orange 100%;
+$pastry_rainbow: #9C63DD 10%, #9C63DD 61%, #0FB6FF 97%;
 @keyframes rainbow-frame-inf {
     0%, 100% { background-image: linear-gradient(to top left, $pastry_rainbow); }
     25% { background-image: linear-gradient(to top right, $pastry_rainbow); }

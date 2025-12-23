@@ -357,28 +357,28 @@ focus_changed_cb (PastryFocusOverlay  *self,
       self->animation,
       "x",
       animate_from.origin.x, 0.0,
-      0.28, 0.2, 1000.0,
+      0.28, 0.2, 100.0,
       (PastryAnimationCallback) animate,
       NULL, NULL);
   pastry_animation_add_spring (
       self->animation,
       "y",
       animate_from.origin.y, 0.0,
-      0.28, 0.2, 1000.0,
+      0.28, 0.2, 100.0,
       (PastryAnimationCallback) animate,
       NULL, NULL);
   pastry_animation_add_spring (
       self->animation,
       "w",
       animate_from.size.width, 0.0,
-      0.28, 0.2, 1000.0,
+      0.28, 0.2, 100.0,
       (PastryAnimationCallback) animate,
       NULL, NULL);
   pastry_animation_add_spring (
       self->animation,
       "h",
       animate_from.size.height, 0.0,
-      0.28, 0.2, 1000.0,
+      0.28, 0.2, 100.0,
       (PastryAnimationCallback) animate,
       NULL, NULL);
 }
