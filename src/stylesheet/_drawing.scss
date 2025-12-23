@@ -22,7 +22,7 @@
     }
 
     &:#{$focus-state} #{$target} {
-        outline-width: $width;
+        outline-width: 0;
         outline-offset: -$width/2.0;
         outline-color: $fc;
     }
