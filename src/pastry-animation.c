@@ -20,6 +20,9 @@
 
 #define G_LOG_DOMAIN "PASTRY::ANIMATION"
 
+#define DELTA   0.001
+#define EPSILON 0.00001
+
 #include "config.h"
 
 #include "pastry-animation.h"
@@ -54,9 +57,11 @@ typedef struct
   double                  damping_ratio;
   double                  mass;
   double                  stiffness;
+  gboolean                clamp;
   PastryAnimationCallback cb;
   gpointer                user_data;
   GDestroyNotify          destroy_data;
+  double                  est_duration;
   GTimer                 *timer;
   double                  velocity;
 } SpringData;
@@ -71,6 +76,14 @@ static double
 oscillate (SpringData *data,
            double      time,
            double     *velocity);
+
+/* Copied with modifications from libadwaita */
+static double
+get_first_zero (SpringData *data);
+
+/* Copied with modifications from libadwaita */
+static double
+calculate_duration (SpringData *data);
 
 static void
 destroy_spring_data (gpointer ptr);
@@ -254,8 +267,11 @@ pastry_animation_add_spring (PastryAnimation        *self,
       data->cb            = cb;
       data->user_data     = user_data;
       data->destroy_data  = destroy_data;
+
       /* We'll fill this in on the first iteration */
       data->timer = NULL;
+
+      data->est_duration = calculate_duration (data);
 
       cb (widget, key, from, user_data);
     }
@@ -281,6 +297,7 @@ tick_cb (GtkWidget     *widget,
     {
       char       *key      = NULL;
       SpringData *data     = NULL;
+      double      elapsed  = 0.0;
       double      value    = 0.0;
       gboolean    finished = FALSE;
 
@@ -297,15 +314,15 @@ tick_cb (GtkWidget     *widget,
         }
       else
         {
-          double elapsed = 0.0;
-
           elapsed = g_timer_elapsed (data->timer, NULL);
           value   = oscillate (data, elapsed, &data->velocity);
         }
 
-      finished = G_APPROX_VALUE (value, data->to, 0.0001) ||
-                 (data->from > data->to && value < data->to) ||
-                 (data->from < data->to && value > data->to);
+      finished = elapsed > data->est_duration ||
+                 (data->damping_ratio >= 1.0 &&
+                  (G_APPROX_VALUE (value, data->to, EPSILON) ||
+                   (data->from > data->to && value < data->to) ||
+                   (data->from < data->to && value > data->to)));
       if (finished)
         value = data->to;
 
@@ -333,7 +350,7 @@ oscillate (SpringData *data,
            double      time,
            double     *velocity)
 {
-  double t        = time;
+  double t        = time * 100.0; // ?
   double b        = data->damping_ratio;
   double m        = data->mass;
   double k        = data->stiffness;
@@ -371,7 +388,9 @@ oscillate (SpringData *data,
   /* Underdamped */
   if (beta < omega0)
     {
-      double omega1 = sqrt ((omega0 * omega0) - (beta * beta));
+      double omega1 = 0.0;
+
+      omega1 = sqrt ((omega0 * omega0) - (beta * beta));
 
       if (velocity != NULL)
         *velocity = envelope *
@@ -391,7 +410,9 @@ oscillate (SpringData *data,
   /* Overdamped */
   if (beta > omega0)
     {
-      double omega2 = sqrt ((beta * beta) - (omega0 * omega0));
+      double omega2 = 0.0;
+
+      omega2 = sqrt ((beta * beta) - (omega0 * omega0));
 
       if (velocity != NULL)
         *velocity = envelope *
@@ -409,6 +430,101 @@ oscillate (SpringData *data,
 
   g_assert_not_reached ();
 }
+
+static double
+get_first_zero (SpringData *data)
+{
+  /* The first frame is not that important and we avoid finding the trivial 0
+   * for in-place animations. */
+  double i = 0.0;
+  double y = 0.0;
+
+  i = 0.001;
+  y = oscillate (data, i, NULL);
+
+  while ((data->to - data->from > DBL_EPSILON && data->to - y > EPSILON) ||
+         (data->from - data->to > DBL_EPSILON && y - data->to > EPSILON))
+    {
+      if (i > 2.0)
+        return 0.0;
+
+      i += 0.001;
+      y = oscillate (data, i, NULL);
+    }
+
+  return i;
+}
+
+static double
+calculate_duration (SpringData *data)
+{
+  double beta   = 0.0;
+  double omega0 = 0.0;
+  double x0     = 0.0;
+  double y0     = 0.0;
+  double x1     = 0.0;
+  double y1     = 0.0;
+  double m      = 0.0;
+  double i      = 0.0;
+
+  beta = data->damping_ratio / (2 * data->mass);
+
+  if (G_APPROX_VALUE (beta, 0, DBL_EPSILON) ||
+      beta < 0)
+    return G_MAXDOUBLE;
+
+  if (data->clamp)
+    {
+      if (G_APPROX_VALUE (data->to, data->from, DBL_EPSILON))
+        return 0;
+      return get_first_zero (data);
+    }
+
+  omega0 = sqrt (data->stiffness / data->mass);
+
+  /*
+   * As first ansatz for the overdamped solution,
+   * and general estimation for the oscillating ones
+   * we take the value of the envelope when it's < epsilon
+   */
+  x0 = -log (EPSILON) / beta;
+
+  /* DBL_EPSILON is too small for this specific comparison, so we use
+   * FLT_EPSILON even though it's doubles */
+  if (G_APPROX_VALUE (beta, omega0, FLT_EPSILON) ||
+      beta < omega0)
+    return x0;
+
+  /*
+   * Since the overdamped solution decays way slower than the envelope
+   * we need to use the value of the oscillation itself.
+   * Newton's root finding method is a good candidate in this particular case:
+   * https://en.wikipedia.org/wiki/Newton%27s_method
+   */
+  y0 = oscillate (data, x0, NULL);
+  m  = (oscillate (data, (x0 + DELTA), NULL) - y0) / DELTA;
+
+  x1 = (data->to - y0 + m * x0) / m;
+  y1 = oscillate (data, x1, NULL);
+
+  while (ABS (data->to - y1) > EPSILON)
+    {
+      if (i > 1.0)
+        return 0.0;
+
+      x0 = x1;
+      y0 = y1;
+
+      m = (oscillate (data, x0 + DELTA, NULL) - y0) / DELTA;
+
+      x1 = (data->to - y0 + m * x0) / m;
+      y1 = oscillate (data, x1, NULL);
+      i += 0.001;
+    }
+
+  return x1;
+}
+
 /* ///COPIED FROM LIBADWAITA */
 
 static void
