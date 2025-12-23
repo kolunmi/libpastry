@@ -58,12 +58,19 @@ typedef struct
   gpointer                user_data;
   GDestroyNotify          destroy_data;
   GTimer                 *timer;
+  double                  velocity;
 } SpringData;
 
 static gboolean
 tick_cb (GtkWidget     *widget,
          GdkFrameClock *frame_clock,
          GWeakRef      *wr);
+
+/* Copied with modifications from libadwaita */
+static double
+oscillate (SpringData *data,
+           double      time,
+           double     *velocity);
 
 static void
 destroy_spring_data (gpointer ptr);
@@ -220,7 +227,25 @@ pastry_animation_add_spring (PastryAnimation        *self,
     {
       SpringData *data = NULL;
 
-      data                = g_new0 (typeof (*data), 1);
+      /* reuse old data if possible */
+      data = g_hash_table_lookup (self->data, key);
+      if (data != NULL)
+        {
+          if (data->user_data != NULL &&
+              data->destroy_data != NULL)
+            /* we are going to overwrite this */
+            data->destroy_data (data->user_data);
+
+          g_clear_pointer (&data->timer, g_timer_destroy);
+
+          /* old velocity is retained */
+        }
+      else
+        {
+          data = g_new0 (typeof (*data), 1);
+          g_hash_table_replace (self->data, g_strdup (key), data);
+        }
+
       data->from          = from;
       data->to            = to;
       data->damping_ratio = damping_ratio;
@@ -232,7 +257,6 @@ pastry_animation_add_spring (PastryAnimation        *self,
       /* We'll fill this in on the first iteration */
       data->timer = NULL;
 
-      g_hash_table_replace (self->data, g_strdup (key), data);
       cb (widget, key, from, user_data);
     }
   else if (user_data != NULL &&
@@ -276,9 +300,7 @@ tick_cb (GtkWidget     *widget,
           double elapsed = 0.0;
 
           elapsed = g_timer_elapsed (data->timer, NULL);
-
-          /* TODO: actually use the spring parameters */
-          value = data->from + 15.0 * elapsed * (data->to - data->from);
+          value   = oscillate (data, elapsed, &data->velocity);
         }
 
       finished = G_APPROX_VALUE (value, data->to, 0.0001) ||
@@ -295,6 +317,99 @@ tick_cb (GtkWidget     *widget,
 
   return G_SOURCE_CONTINUE;
 }
+
+/* COPIED FROM LIBADWAITA */
+
+/* Based on RBBSpringAnimation from RBBAnimation, MIT license.
+ * https://github.com/robb/RBBAnimation/blob/master/RBBAnimation/RBBSpringAnimation.m
+ *
+ * @offset: Starting value of the spring simulation. Use -1 for regular animations,
+ * as the formulas are tailored to rest at 0 and the resulting evolution between
+ * -1 and 0 will be lerped to the desired range afterwards. Otherwise use 0 for in-place
+ * animations which already start at equilibrium
+ */
+static double
+oscillate (SpringData *data,
+           double      time,
+           double     *velocity)
+{
+  double t        = time;
+  double b        = data->damping_ratio;
+  double m        = data->mass;
+  double k        = data->stiffness;
+  double v0       = 0.0;
+  double beta     = 0.0;
+  double omega0   = 0.0;
+  double x0       = 0.0;
+  double envelope = 0.0;
+
+  beta     = b / (2 * m);
+  omega0   = sqrt (k / m);
+  x0       = data->from - data->to;
+  envelope = exp (-beta * t);
+
+  /*
+   * Solutions of the form C1*e^(lambda1*x) + C2*e^(lambda2*x)
+   * for the differential equation m*ẍ+b*ẋ+kx = 0
+   */
+
+  /* Critically damped */
+  /* DBL_EPSILON is too small for this specific comparison, so we use
+   * FLT_EPSILON even though it's doubles */
+  if (G_APPROX_VALUE (beta, omega0, FLT_EPSILON))
+    {
+      if (velocity != NULL)
+        *velocity = envelope *
+                    (-beta * t * v0 -
+                     beta * beta * t * x0 +
+                     v0);
+
+      return data->to + envelope *
+                            (x0 + (beta * x0 + v0) * t);
+    }
+
+  /* Underdamped */
+  if (beta < omega0)
+    {
+      double omega1 = sqrt ((omega0 * omega0) - (beta * beta));
+
+      if (velocity != NULL)
+        *velocity = envelope *
+                    (v0 * cos (omega1 * t) -
+                     (x0 * omega1 +
+                      (beta * beta * x0 + beta * v0) /
+                          (omega1)) *
+                         sin (omega1 * t));
+
+      return data->to + envelope *
+                            (x0 * cos (omega1 * t) +
+                             ((beta * x0 + v0) /
+                              omega1) *
+                                 sin (omega1 * t));
+    }
+
+  /* Overdamped */
+  if (beta > omega0)
+    {
+      double omega2 = sqrt ((beta * beta) - (omega0 * omega0));
+
+      if (velocity != NULL)
+        *velocity = envelope *
+                    (v0 * coshl (omega2 * t) +
+                     (omega2 * x0 -
+                      (beta * beta * x0 + beta * v0) /
+                          omega2) *
+                         sinhl (omega2 * t));
+
+      return data->to + envelope *
+                            (x0 * coshl (omega2 * t) +
+                             ((beta * x0 + v0) / omega2) *
+                                 sinhl (omega2 * t));
+    }
+
+  g_assert_not_reached ();
+}
+/* ///COPIED FROM LIBADWAITA */
 
 static void
 destroy_spring_data (gpointer ptr)
