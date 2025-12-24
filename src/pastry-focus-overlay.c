@@ -353,32 +353,36 @@ focus_changed_cb (PastryFocusOverlay  *self,
   g_clear_object (&self->focus_widget);
   self->focus_widget = g_object_ref (widget);
 
+#define DAMPING_RATIO 1.0
+#define MASS          1.0
+#define STIFFNESS     0.25
+
   pastry_animation_add_spring (
       self->animation,
       "x",
       animate_from.origin.x, 0.0,
-      0.28, 0.2, 100.0,
+      DAMPING_RATIO, MASS, STIFFNESS,
       (PastryAnimationCallback) animate,
       NULL, NULL);
   pastry_animation_add_spring (
       self->animation,
       "y",
       animate_from.origin.y, 0.0,
-      0.28, 0.2, 100.0,
+      DAMPING_RATIO, MASS, STIFFNESS,
       (PastryAnimationCallback) animate,
       NULL, NULL);
   pastry_animation_add_spring (
       self->animation,
       "w",
       animate_from.size.width, 0.0,
-      0.28, 0.2, 100.0,
+      DAMPING_RATIO, MASS, STIFFNESS,
       (PastryAnimationCallback) animate,
       NULL, NULL);
   pastry_animation_add_spring (
       self->animation,
       "h",
       animate_from.size.height, 0.0,
-      0.28, 0.2, 100.0,
+      DAMPING_RATIO, MASS, STIFFNESS,
       (PastryAnimationCallback) animate,
       NULL, NULL);
 }
