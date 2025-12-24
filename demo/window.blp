@@ -1,8 +1,8 @@
 using Gtk 4.0;
 
-$PastryGlassRoot root {
+$PastryFocusOverlay root {
   child: $PastryAnnotationOverlay {
-    child: $PastryFocusOverlay {
+    child: $PastryGlassRoot {
       child: Box {
         styles [
           "main-bg",
@@ -26,81 +26,109 @@ $PastryGlassRoot root {
           };
         }
 
-        Box {
+        $PastryGlassFrame {
           vexpand: true;
-          orientation: vertical;
-          margin-start: 10;
-          margin-end: 10;
-          margin-top: 10;
-          margin-bottom: 10;
+          hexpand: true;
 
-          Label {
-            xalign: 0.0;
-            label: "Please choose the option which is not like the others";
-          }
+          child: Box {
+            orientation: vertical;
+            margin-start: 10;
+            margin-end: 10;
+            margin-top: 10;
+            margin-bottom: 10;
 
-          Grid {
-            column-spacing: 7;
-            row-spacing: 7;
+            Label {
+              xalign: 0.0;
+              label: "Please choose the option which is not like the others";
+            }
 
-            Button {
-              label: "Option A";
+            Grid {
+              column-spacing: 7;
+              row-spacing: 7;
 
-              layout {
+              Button {
+                label: "Option A";
+
+                layout {
                 column: 0;
                 row: 0;
+                }
               }
-            }
 
-            Button {
-              label: "Option B";
+              Button {
+                label: "Option B";
 
-              layout {
+                layout {
                 column: 0;
                 row: 1;
+                }
               }
-            }
 
-            Button {
-              label: "Option C";
+              Button {
+                label: "Option C";
 
-              layout {
+                layout {
                 column: 1;
                 row: 0;
                 column-span: 1;
                 row-span: 2;
+                }
               }
-            }
 
-            Button {
-              label: "Option D";
+              Button {
+                label: "Option D";
 
-              layout {
+                layout {
                 column: 2;
                 row: 1;
                 column-span: 2;
                 row-span: 1;
+                }
               }
-            }
 
-            Button {
-              label: "Option Y";
+              Button {
+                label: "Option Y";
 
-              layout {
+                layout {
                 column: 2;
                 row: 0;
+                }
               }
-            }
 
-            Button {
-              label: "Option W";
+              Button {
+                label: "Option W";
 
-              layout {
+                layout {
                 column: 3;
                 row: 0;
+                }
+              }
+
+              Button {
+                label: "Tall";
+                vexpand: true;
+
+                layout {
+                  column: 4;
+                  row: 0;
+                  column-span: 3;
+                  row-span: 6;
+                }
+              }
+
+              Button {
+                label: "Wide";
+                hexpand: true;
+
+                layout {
+                  column: 0;
+                  row: 2;
+                  column-span: 4;
+                  row-span: 4;
+                }
               }
             }
-          }
+          };
         }
       };
     };
