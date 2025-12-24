@@ -26,6 +26,9 @@
 
 #define G_LOG_DOMAIN "PASTRY::FOCUS-OVERLAY"
 
+#define INSET_VALUE   5.0
+#define CORNER_RADIUS 15.0
+
 #include "config.h"
 
 #include "pastry-animation.h"
@@ -169,7 +172,7 @@ size_allocate (GtkWidget *widget,
           bounds.origin.y += self->frame_pos.origin.y;
           bounds.size.width += self->frame_pos.size.width;
           bounds.size.height += self->frame_pos.size.height;
-          graphene_rect_inset (&bounds, -5.0, -5.0);
+          graphene_rect_inset (&bounds, -INSET_VALUE, -INSET_VALUE);
 
           gtk_widget_set_visible (self->frame, TRUE);
           gtk_widget_allocate (
@@ -199,11 +202,11 @@ snapshot (GtkWidget   *widget,
       GskRoundedRect rrect = { 0 };
 
       g_assert (gtk_widget_compute_bounds (self->frame, widget, &rrect.bounds));
-      graphene_rect_inset (&rrect.bounds, 5.0, 5.0);
+      graphene_rect_inset (&rrect.bounds, INSET_VALUE, INSET_VALUE);
       for (guint i = 0; i < G_N_ELEMENTS (rrect.corner); i++)
         {
-          rrect.corner[i].width  = 15.0;
-          rrect.corner[i].height = 15.0;
+          rrect.corner[i].width  = CORNER_RADIUS;
+          rrect.corner[i].height = CORNER_RADIUS;
         }
 
       gtk_snapshot_push_mask (snapshot, GSK_MASK_MODE_INVERTED_ALPHA);

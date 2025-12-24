@@ -9,11 +9,10 @@
 // If $outer is true, the focus ring extends outward. Otherwise, it extends inward.
 // If $within is true, use focus-within instead of focus:focus-visible
 //
-@mixin focus-ring($target: null, $width: 6px, $offset: -$width, $outer: false, $focus-state: 'focus:focus-visible', $fc: $focus_border_color) {
+@mixin focus-ring($target: null, $width: 2px, $offset: -$width, $outer: false, $focus-state: 'focus:focus-visible', $fc: $focus_border_color) {
     transition-property: outline-width, outline-offset, outline-color;
-    transition-duration: 150ms;
-    animation-timing-function: ease-in-out;
-
+    transition-duration: 100ms;
+    animation-timing-function: ease-out;
 
     & #{$target} {
         outline-width: 0;
@@ -22,8 +21,8 @@
     }
 
     &:#{$focus-state} #{$target} {
-        outline-width: 0;
-        outline-offset: -$width/2.0;
+        outline-width: $width;
+        outline-offset: -$width;
         outline-color: $fc;
     }
 }

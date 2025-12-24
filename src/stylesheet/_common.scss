@@ -4516,7 +4516,8 @@ pastry-glass-root > frame {
     border-style: solid;
     border-color: transparentize(darken($bg_color, 50%), 0.3);
     border-width: 1px;
-    background-image: image(transparentize($bg_color, 0.35));
+
+    background-image: image(transparentize($bg_color, 0.25));
 }
 
 pastry-annotation-overlay > label {
@@ -4534,6 +4535,7 @@ $pastry_rainbow: #9C63DD 10%, #9C63DD 61%, #0FB6FF 97%;
 pastry-focus-overlay {
     > frame {
         border-radius: 15px;
+        border-color: $focus_border_color;
         border-width: 2px;
 
         animation-name: rainbow-frame-inf;
