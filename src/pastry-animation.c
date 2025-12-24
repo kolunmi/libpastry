@@ -18,6 +18,13 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/**
+ * PastryAnimation:
+ *
+ * Manages animations for a widget. Individual value animations are tracked in a
+ * hash map with string keys, allowing them to be easily restarted or replaced.
+ */
+
 #define G_LOG_DOMAIN "PASTRY::ANIMATION"
 
 #define DELTA   0.001
@@ -182,6 +189,11 @@ pastry_animation_class_init (PastryAnimationClass *klass)
   object_class->get_property = get_property;
   object_class->dispose      = dispose;
 
+  /**
+   * PastryAnimation:widget:
+   *
+   * The widget on which this animation is attached.
+   */
   props[PROP_WIDGET] =
       g_param_spec_object (
           "widget",
@@ -200,6 +212,14 @@ pastry_animation_init (PastryAnimation *self)
       g_str_hash, g_str_equal, g_free, destroy_spring_data);
 }
 
+/**
+ * pastry_animation_new:
+ * @widget: The widget onto which to attach the tick callback
+ *
+ * Creates a new `PastryAnimation` object.
+ *
+ * Returns: The newly created `PastryAnimation` object.
+ */
 PastryAnimation *
 pastry_animation_new (GtkWidget *widget)
 {
@@ -210,6 +230,14 @@ pastry_animation_new (GtkWidget *widget)
       NULL);
 }
 
+/**
+ * pastry_animation_dup_widget:
+ * @self: a `PastryAnimation`
+ *
+ * Gets the widget on which @self is attached.
+ *
+ * Returns: (nullable) (transfer full): the widget for @self
+ */
 GtkWidget *
 pastry_animation_dup_widget (PastryAnimation *self)
 {
@@ -217,6 +245,22 @@ pastry_animation_dup_widget (PastryAnimation *self)
   return g_weak_ref_get (&self->wr);
 }
 
+/**
+ * pastry_animation_add_spring:
+ * @self: a `PastryAnimation`
+ * @key: a string ID to replace
+ * @from: the start value
+ * @to: the end value
+ * @damping_ratio: the damping ratio
+ * @mass: the mass
+ * @stiffness: the stiffness
+ * @cb: a tick callback
+ * @user_data: the user data pointer to be passed to @cb
+ * @destroy_data: the destruction function for @user_data
+ *
+ * Adds a one shot spring animation to @self. If @key is already running in
+ * @self, then the old animation is replaced, maintaining the current velocity.
+ */
 void
 pastry_animation_add_spring (PastryAnimation        *self,
                              const char             *key,
