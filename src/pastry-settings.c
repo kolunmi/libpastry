@@ -28,6 +28,9 @@
 
 #include "config.h"
 
+#include <libmanette.h>
+#include <linux/input-event-codes.h>
+
 #include "pastry-settings.h"
 #include "pastry-util.h"
 
@@ -60,7 +63,13 @@ struct _PastrySettings
     GDBusProxy *settings_portal;
     gboolean    portal_wants_dark;
 
-    GtkCssProvider *applied;
+    GtkCssProvider *applied_css;
+
+    struct
+    {
+      ManetteMonitor *monitor;
+      GPtrArray      *devices;
+    } manette;
   } default_state;
 };
 G_DEFINE_FINAL_TYPE (PastrySettings, pastry_settings, G_TYPE_OBJECT)
@@ -78,6 +87,9 @@ init_css (PastrySettings *self);
 #define PORTAL_ERROR_NOT_FOUND    "org.freedesktop.portal.Error.NotFound"
 static void
 init_portal (PastrySettings *self);
+
+static void
+init_manette (PastrySettings *self);
 
 /* Copied with modifications from libadwaita */
 static void
@@ -103,14 +115,82 @@ static void
 apply_css (PastrySettings *self);
 
 static void
+controller_connected (PastrySettings *self,
+                      ManetteDevice  *device,
+                      ManetteMonitor *monitor);
+
+static void
+controller_disconnected (PastrySettings *self,
+                         ManetteDevice  *device,
+                         ManetteMonitor *monitor);
+
+static void
+controller_button_pressed (PastrySettings *self,
+                           ManetteEvent   *event,
+                           ManetteDevice  *device);
+
+static void
+controller_button_released (PastrySettings *self,
+                            ManetteEvent   *event,
+                            ManetteDevice  *device);
+
+static void
+controller_absolute_axis_changed (PastrySettings *self,
+                                  ManetteEvent   *event,
+                                  ManetteDevice  *device);
+
+static void
+controller_hat_axis_changed (PastrySettings *self,
+                             ManetteEvent   *event,
+                             ManetteDevice  *device);
+
+static void
+dispatch_controller_event (PastrySettings *self,
+                           ManetteEvent   *event,
+                           ManetteDevice  *device);
+
+static void
 dispose (GObject *object)
 {
   PastrySettings *self = PASTRY_SETTINGS (object);
 
-  if (self->default_state.applied != NULL)
+  if (self->default_state.settings_portal != NULL)
+    g_signal_handlers_disconnect_by_func (
+        self->default_state.settings_portal,
+        portal_changed_cb,
+        self);
+
+  if (self->default_state.manette.monitor != NULL)
+    {
+      g_signal_handlers_disconnect_by_func (
+          self->default_state.manette.monitor,
+          controller_connected,
+          self);
+      g_signal_handlers_disconnect_by_func (
+          self->default_state.manette.monitor,
+          controller_disconnected,
+          self);
+    }
+
+  if (self->default_state.manette.devices != NULL)
+    {
+      for (guint i = 0; i < self->default_state.manette.devices->len; i++)
+        {
+          ManetteDevice *device = NULL;
+
+          device = g_ptr_array_index (self->default_state.manette.devices, i);
+
+          g_signal_handlers_disconnect_by_func (device, controller_button_pressed, self);
+          g_signal_handlers_disconnect_by_func (device, controller_button_released, self);
+          g_signal_handlers_disconnect_by_func (device, controller_absolute_axis_changed, self);
+          g_signal_handlers_disconnect_by_func (device, controller_hat_axis_changed, self);
+        }
+    }
+
+  if (self->default_state.applied_css != NULL)
     gtk_style_context_remove_provider_for_display (
         self->default_state.display,
-        GTK_STYLE_PROVIDER (self->default_state.applied));
+        GTK_STYLE_PROVIDER (self->default_state.applied_css));
 
   pastry_clear_pointers (
       &self->theme, g_object_unref,
@@ -120,6 +200,8 @@ dispose (GObject *object)
       &self->default_state.hc_light, g_object_unref,
       &self->default_state.hc_dark, g_object_unref,
       &self->default_state.settings_portal, g_object_unref,
+      &self->default_state.manette.monitor, g_object_unref,
+      &self->default_state.manette.devices, g_ptr_array_unref,
       NULL);
 
   G_OBJECT_CLASS (pastry_settings_parent_class)->dispose (object);
@@ -304,6 +386,7 @@ init_default (void)
 
   init_css (settings);
   init_portal (settings);
+  init_manette (settings);
 
   return g_steal_pointer (&settings);
 }
@@ -372,6 +455,50 @@ init_portal (PastrySettings *self)
   g_signal_connect_swapped (
       self->default_state.settings_portal, "g-signal",
       G_CALLBACK (portal_changed_cb), self);
+}
+
+static void
+init_manette (PastrySettings *self)
+{
+  g_autoptr (ManetteMonitor) monitor  = NULL;
+  g_autoptr (ManetteMonitorIter) iter = NULL;
+  g_autoptr (GPtrArray) devices       = NULL;
+
+  monitor = manette_monitor_new ();
+  devices = g_ptr_array_new_with_free_func (g_object_unref);
+
+  iter = manette_monitor_iterate (monitor);
+  for (;;)
+    {
+      gboolean result                  = FALSE;
+      g_autoptr (ManetteDevice) device = NULL;
+
+      result = manette_monitor_iter_next (iter, &device);
+      if (!result)
+        break;
+
+      g_debug ("Detected controller number %d with guid %s: %s",
+               devices->len,
+               manette_device_get_guid (device),
+               manette_device_get_name (device));
+
+      g_signal_connect_swapped (device, "button-press-event", G_CALLBACK (controller_button_pressed), self);
+      g_signal_connect_swapped (device, "button-release-event", G_CALLBACK (controller_button_released), self);
+      g_signal_connect_swapped (device, "absolute-axis-event", G_CALLBACK (controller_absolute_axis_changed), self);
+      g_signal_connect_swapped (device, "hat-axis-event", G_CALLBACK (controller_hat_axis_changed), self);
+
+      g_ptr_array_add (devices, g_object_ref (device));
+    }
+
+  g_signal_connect_swapped (
+      monitor, "device-connected",
+      G_CALLBACK (controller_connected), self);
+  g_signal_connect_swapped (
+      monitor, "device-disconnected",
+      G_CALLBACK (controller_disconnected), self);
+
+  self->default_state.manette.monitor = g_steal_pointer (&monitor);
+  self->default_state.manette.devices = g_steal_pointer (&devices);
 }
 
 static void
@@ -479,19 +606,209 @@ read_setting (PastrySettings *self,
 static void
 apply_css (PastrySettings *self)
 {
-  if (self->default_state.applied != NULL)
+  if (self->default_state.applied_css != NULL)
     gtk_style_context_remove_provider_for_display (
         self->default_state.display,
-        GTK_STYLE_PROVIDER (self->default_state.applied));
-  g_clear_object (&self->default_state.applied);
+        GTK_STYLE_PROVIDER (self->default_state.applied_css));
+  g_clear_object (&self->default_state.applied_css);
 
   if (self->default_state.portal_wants_dark)
-    self->default_state.applied = g_object_ref (self->default_state.dark);
+    self->default_state.applied_css = g_object_ref (self->default_state.dark);
   else
-    self->default_state.applied = g_object_ref (self->default_state.light);
+    self->default_state.applied_css = g_object_ref (self->default_state.light);
 
   gtk_style_context_add_provider_for_display (
       self->default_state.display,
-      GTK_STYLE_PROVIDER (self->default_state.applied),
+      GTK_STYLE_PROVIDER (self->default_state.applied_css),
       GTK_STYLE_PROVIDER_PRIORITY_SETTINGS);
+}
+
+static void
+controller_connected (PastrySettings *self,
+                      ManetteDevice  *device,
+                      ManetteMonitor *monitor)
+{
+  g_debug ("Connected controller number %d with guid %s: %s",
+           self->default_state.manette.devices->len,
+           manette_device_get_guid (device),
+           manette_device_get_name (device));
+
+  g_signal_connect_swapped (device, "button-press-event", G_CALLBACK (controller_button_pressed), self);
+  g_signal_connect_swapped (device, "button-release-event", G_CALLBACK (controller_button_released), self);
+  g_signal_connect_swapped (device, "absolute-axis-event", G_CALLBACK (controller_absolute_axis_changed), self);
+  g_signal_connect_swapped (device, "hat-axis-event", G_CALLBACK (controller_hat_axis_changed), self);
+
+  g_ptr_array_add (
+      self->default_state.manette.devices,
+      g_object_ref (device));
+}
+
+static void
+controller_disconnected (PastrySettings *self,
+                         ManetteDevice  *device,
+                         ManetteMonitor *monitor)
+{
+  g_debug ("Disconnected controller with guid %s: %s",
+           manette_device_get_guid (device),
+           manette_device_get_name (device));
+
+  g_signal_handlers_disconnect_by_func (device, controller_button_pressed, self);
+  g_signal_handlers_disconnect_by_func (device, controller_button_released, self);
+  g_signal_handlers_disconnect_by_func (device, controller_absolute_axis_changed, self);
+  g_signal_handlers_disconnect_by_func (device, controller_hat_axis_changed, self);
+
+  g_ptr_array_remove (
+      self->default_state.manette.devices,
+      device);
+}
+
+static void
+controller_button_pressed (PastrySettings *self,
+                           ManetteEvent   *event,
+                           ManetteDevice  *device)
+{
+  dispatch_controller_event (self, event, device);
+}
+
+static void
+controller_button_released (PastrySettings *self,
+                            ManetteEvent   *event,
+                            ManetteDevice  *device)
+{
+  dispatch_controller_event (self, event, device);
+}
+
+static void
+controller_absolute_axis_changed (PastrySettings *self,
+                                  ManetteEvent   *event,
+                                  ManetteDevice  *device)
+{
+  dispatch_controller_event (self, event, device);
+}
+
+static void
+controller_hat_axis_changed (PastrySettings *self,
+                             ManetteEvent   *event,
+                             ManetteDevice  *device)
+{
+  dispatch_controller_event (self, event, device);
+}
+
+static void
+dispatch_controller_event (PastrySettings *self,
+                           ManetteEvent   *event,
+                           ManetteDevice  *device)
+{
+  GApplication    *app    = NULL;
+  GtkWindow       *window = NULL;
+  GtkWidget       *focus  = NULL;
+  ManetteEventType type   = MANETTE_EVENT_NOTHING;
+
+  app = g_application_get_default ();
+  if (!GTK_IS_APPLICATION (app))
+    return;
+
+  window = gtk_application_get_active_window (GTK_APPLICATION (app));
+  if (window == NULL || gtk_window_is_suspended (window))
+    return;
+
+  focus = gtk_root_get_focus (GTK_ROOT (window));
+  if (focus == NULL)
+    {
+      focus = gtk_widget_get_focus_child (GTK_WIDGET (window));
+      gtk_root_set_focus (GTK_ROOT (window), focus);
+    }
+
+  type = manette_event_get_event_type (event);
+  switch (type)
+    {
+    case MANETTE_EVENT_BUTTON_PRESS:
+      {
+        guint16 button = 0;
+
+        manette_event_get_button (event, &button);
+        switch (button)
+          {
+          case BTN_A:
+            if (focus != NULL)
+              gtk_widget_activate (focus);
+            break;
+          case BTN_B:
+            break;
+          case BTN_C:
+            break;
+          case BTN_X:
+            break;
+          case BTN_Y:
+            break;
+          case BTN_Z:
+            break;
+          case BTN_TL:
+            break;
+          case BTN_TR:
+            break;
+          case BTN_TL2:
+            break;
+          case BTN_TR2:
+            break;
+          case BTN_SELECT:
+            break;
+          case BTN_START:
+            break;
+          case BTN_MODE:
+            break;
+          case BTN_THUMBL:
+            break;
+          case BTN_THUMBR:
+            break;
+          case BTN_DPAD_UP:
+            gtk_widget_child_focus (GTK_WIDGET (window), GTK_DIR_UP);
+            break;
+          case BTN_DPAD_DOWN:
+            gtk_widget_child_focus (GTK_WIDGET (window), GTK_DIR_DOWN);
+            break;
+          case BTN_DPAD_LEFT:
+            gtk_widget_child_focus (GTK_WIDGET (window), GTK_DIR_LEFT);
+            break;
+          case BTN_DPAD_RIGHT:
+            gtk_widget_child_focus (GTK_WIDGET (window), GTK_DIR_RIGHT);
+            break;
+          case BTN_TRIGGER_HAPPY1:
+            break;
+          case BTN_TRIGGER_HAPPY2:
+            break;
+          case BTN_TRIGGER_HAPPY3:
+            break;
+          case BTN_TRIGGER_HAPPY4:
+            break;
+          case BTN_TRIGGER_HAPPY5:
+            break;
+          case BTN_TRIGGER_HAPPY6:
+            break;
+          case BTN_TRIGGER_HAPPY7:
+            break;
+          case BTN_TRIGGER_HAPPY8:
+            break;
+          case BTN_TRIGGER_HAPPY9:
+            break;
+          case BTN_TRIGGER_HAPPY10:
+            break;
+          case BTN_TRIGGER_HAPPY11:
+            break;
+          default:
+            break;
+          }
+      }
+      break;
+    case MANETTE_EVENT_BUTTON_RELEASE:
+      break;
+    case MANETTE_EVENT_ABSOLUTE:
+      break;
+    case MANETTE_EVENT_HAT:
+      break;
+    case MANETTE_EVENT_NOTHING:
+    case MANETTE_LAST_EVENT:
+    default:
+      break;
+    }
 }

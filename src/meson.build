@@ -53,6 +53,7 @@ configure_file(
 libpastry_deps = [
   cc.find_library('m', required: true),
   dependency('gtk4', version: '>=4.20'),
+  dependency('manette-0.2', version: '>=0.2'),
 ]
 
 subdir('stylesheet')
