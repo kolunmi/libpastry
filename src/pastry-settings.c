@@ -74,10 +74,6 @@ struct _PastrySettings
 };
 G_DEFINE_FINAL_TYPE (PastrySettings, pastry_settings, G_TYPE_OBJECT)
 
-typedef struct
-{
-};
-
 static PastrySettings *
 init_default (void);
 
