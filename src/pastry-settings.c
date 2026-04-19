@@ -26,7 +26,7 @@
 
 #define G_LOG_DOMAIN "PASTRY::SETTINGS"
 
-#include "config.h"
+#include "pastry-config.h"
 
 #include <libmanette.h>
 #include <linux/input-event-codes.h>
@@ -73,6 +73,10 @@ struct _PastrySettings
   } default_state;
 };
 G_DEFINE_FINAL_TYPE (PastrySettings, pastry_settings, G_TYPE_OBJECT)
+
+typedef struct
+{
+};
 
 static PastrySettings *
 init_default (void);
@@ -312,7 +316,7 @@ pastry_copy_accent_rgba (GdkRGBA *rgba)
   if (theme != NULL)
     pastry_visual_theme_copy_accent_rgba (theme, rgba);
   else
-    *rgba = (GdkRGBA) { 0 };
+    *rgba = (GdkRGBA){ 0 };
 }
 
 /**

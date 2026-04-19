@@ -27,7 +27,7 @@
 
 #define G_LOG_DOMAIN "PASTRY::PROPERTY-TRAIL"
 
-#include "config.h"
+#include "pastry-config.h"
 
 #include "pastry-property-trail.h"
 #include "pastry-util.h"

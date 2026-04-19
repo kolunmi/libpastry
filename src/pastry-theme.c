@@ -26,7 +26,7 @@
 
 #define G_LOG_DOMAIN "PASTRY::THEME"
 
-#include "config.h"
+#include "pastry-config.h"
 
 #include "pastry-theme.h"
 #include "pastry-util.h"

@@ -27,7 +27,7 @@
 
 #define G_LOG_DOMAIN "PASTRY::SOUND-THEME"
 
-#include "config.h"
+#include "pastry-config.h"
 
 #include "pastry-sound-theme.h"
 #include "pastry-util.h"

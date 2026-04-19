@@ -29,7 +29,7 @@
 #define DEFAULT_N_GLASS_WIDGETS 8
 #define DEFAULT_BLUR_RADIUS     32.0
 
-#include "config.h"
+#include "pastry-config.h"
 
 #include "pastry-glass-root.h"
 #include "pastry-glassed.h"

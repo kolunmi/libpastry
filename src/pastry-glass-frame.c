@@ -27,7 +27,7 @@
 
 #define G_LOG_DOMAIN "PASTRY::GLASS-FRAME"
 
-#include "config.h"
+#include "pastry-config.h"
 
 #include "pastry-glass-frame.h"
 #include "pastry-glassed.h"

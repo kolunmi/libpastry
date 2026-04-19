@@ -29,9 +29,10 @@
 #define INSET_VALUE   5.0
 #define CORNER_RADIUS 15.0
 
-#include "config.h"
+#include "pastry-config.h"
 
-#include "pastry-animation.h"
+#include <bge.h>
+
 #include "pastry-focus-overlay.h"
 #include "pastry-property-trail.h"
 #include "pastry-util.h"
@@ -54,7 +55,7 @@ struct _PastryFocusOverlay
 
   GtkWidget           *frame;
   PastryPropertyTrail *focus_trail;
-  PastryAnimation     *animation;
+  BgeAnimation        *animation;
 
   GtkWidget      *focus_widget;
   graphene_rect_t frame_pos;
@@ -213,7 +214,7 @@ snapshot (GtkWidget   *widget,
       gtk_snapshot_push_rounded_clip (snapshot, &rrect);
       gtk_snapshot_append_color (
           snapshot,
-          &(GdkRGBA) {
+          &(GdkRGBA){
               .red   = 0.0,
               .green = 0.0,
               .blue  = 0.0,
@@ -271,7 +272,7 @@ pastry_focus_overlay_init (PastryFocusOverlay *self)
       self->focus_trail, "changed",
       G_CALLBACK (focus_changed_cb), self);
 
-  self->animation = pastry_animation_new (GTK_WIDGET (self));
+  self->animation = bge_animation_new (GTK_WIDGET (self));
 }
 
 /**
@@ -357,37 +358,37 @@ focus_changed_cb (PastryFocusOverlay  *self,
   self->focus_widget = g_object_ref (widget);
 
 #define DAMPING_RATIO 1.0
-#define MASS          1.0
-#define STIFFNESS     0.25
+#define MASS          0.1
+#define STIFFNESS     100.0
 
-  pastry_animation_add_spring (
+  bge_animation_add_spring (
       self->animation,
       "x",
       animate_from.origin.x, 0.0,
       DAMPING_RATIO, MASS, STIFFNESS,
-      (PastryAnimationCallback) animate,
-      NULL, NULL);
-  pastry_animation_add_spring (
+      (BgeAnimationCallback) animate,
+      NULL, NULL, NULL);
+  bge_animation_add_spring (
       self->animation,
       "y",
       animate_from.origin.y, 0.0,
       DAMPING_RATIO, MASS, STIFFNESS,
-      (PastryAnimationCallback) animate,
-      NULL, NULL);
-  pastry_animation_add_spring (
+      (BgeAnimationCallback) animate,
+      NULL, NULL, NULL);
+  bge_animation_add_spring (
       self->animation,
       "w",
       animate_from.size.width, 0.0,
       DAMPING_RATIO, MASS, STIFFNESS,
-      (PastryAnimationCallback) animate,
-      NULL, NULL);
-  pastry_animation_add_spring (
+      (BgeAnimationCallback) animate,
+      NULL, NULL, NULL);
+  bge_animation_add_spring (
       self->animation,
       "h",
       animate_from.size.height, 0.0,
       DAMPING_RATIO, MASS, STIFFNESS,
-      (PastryAnimationCallback) animate,
-      NULL, NULL);
+      (BgeAnimationCallback) animate,
+      NULL, NULL, NULL);
 }
 
 static void

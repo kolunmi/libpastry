@@ -1,15 +1,23 @@
 project('libpastry', 'c',
           version: '0.1.0',
     meson_version: '>= 1.0.0',
-  default_options: [ 'warning_level=2', 'werror=false', 'c_std=gnu11', ],
+    default_options: [
+      'warning_level=2', 'werror=false', 'c_std=gnu11',
+      'bazaar:bge_only=true',
+    ],
 )
 
 cc = meson.get_compiler('c')
 
+math_dep    = cc.find_library('m', required: true)
+gtk_dep     = dependency('gtk4', version: '>=4.22')
+manette_dep = dependency('manette-0.2', version: '>=0.2')
+bge_dep     = dependency('libbge', version: '>=0.7.15')
+
 config_h = configuration_data()
 config_h.set_quoted('LIBPASTRY_INSIDE', '1')
 config_h.set_quoted('PACKAGE_VERSION', meson.project_version())
-configure_file(output: 'config.h', configuration: config_h)
+configure_file(output: 'pastry-config.h', configuration: config_h)
 add_project_arguments(['-I' + meson.project_build_root()], language: 'c')
 
 

@@ -20,6 +20,8 @@
 
 #define G_LOG_DOMAIN "PASTRY::CORE"
 
+#include <bge.h>
+
 #include "libpastry.h"
 
 /**
@@ -33,8 +35,8 @@ void
 pastry_init (void)
 {
   gtk_init ();
+  bge_init ();
 
-  g_type_ensure (PASTRY_TYPE_ANIMATION);
   g_type_ensure (PASTRY_TYPE_ANNOTATION_OVERLAY);
   g_type_ensure (PASTRY_TYPE_FOCUS_OVERLAY);
   g_type_ensure (PASTRY_TYPE_GLASSED);

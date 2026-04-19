@@ -2,7 +2,6 @@ api_version = '0.1'
 
 libpastry_sources = [
   'libpastry.c',
-  'pastry-animation.c',
   'pastry-annotation-overlay.c',
   'pastry-focus-overlay.c',
   'pastry-glass-frame.c',
@@ -20,7 +19,6 @@ libpastry_sources = [
 
 libpastry_headers = [
   'libpastry.h',
-  'pastry-animation.h',
   'pastry-annotation-overlay.h',
   'pastry-focus-overlay.h',
   'pastry-glass-frame.h',
@@ -51,9 +49,10 @@ configure_file(
 )
 
 libpastry_deps = [
-  cc.find_library('m', required: true),
-  dependency('gtk4', version: '>=4.20'),
-  dependency('manette-0.2', version: '>=0.2'),
+  math_dep,
+  gtk_dep,
+  manette_dep,
+  bge_dep,
 ]
 
 subdir('stylesheet')

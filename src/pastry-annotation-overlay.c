@@ -26,7 +26,7 @@
 
 #define G_LOG_DOMAIN "PASTRY::ANNOTATION-OVERLAY"
 
-#include "config.h"
+#include "pastry-config.h"
 
 #include "pastry-annotation-overlay.h"
 #include "pastry-glassed.h"

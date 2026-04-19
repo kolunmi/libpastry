@@ -27,7 +27,7 @@
 
 #define G_LOG_DOMAIN "PASTRY::VISUAL-THEME"
 
-#include "config.h"
+#include "pastry-config.h"
 
 #include "pastry-util.h"
 #include "pastry-visual-theme.h"
@@ -208,11 +208,11 @@ pastry_visual_theme_set_accent (PastryVisualTheme *self,
       else
         {
           g_critical ("\"%s\" is an invalid RGBA spec", accent);
-          self->accent_rgba = (GdkRGBA) { 0 };
+          self->accent_rgba = (GdkRGBA){ 0 };
         }
     }
   else
-    self->accent_rgba = (GdkRGBA) { 0 };
+    self->accent_rgba = (GdkRGBA){ 0 };
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ACCENT]);
 }

@@ -20,7 +20,7 @@
 
 #define G_LOG_DOMAIN "PASTRY::UTIL"
 
-#include "config.h"
+#include "pastry-config.h"
 
 #include "pastry-util.h"
 

@@ -26,7 +26,7 @@
 
 #define G_LOG_DOMAIN "PASTRY::SPINNER"
 
-#include "config.h"
+#include "pastry-config.h"
 
 #include "pastry-property-trail.h"
 #include "pastry-settings.h"
